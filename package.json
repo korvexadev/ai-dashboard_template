@@ -1,0 +1,35 @@
+{
+  "name": "mikozi-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit --incremental false",
+    "test": "vitest run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "api:generate": "openapi-typescript ../backend/openapi/mikozi.v1.json -o src/lib/api/generated.ts",
+    "api:check": "node scripts/check-api-contract.mjs"
+  },
+  "dependencies": {
+    "next": "16.2.12",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.21",
+    "@types/react": "19.2.5",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.27.0",
+    "eslint-config-next": "16.2.12",
+    "openapi-typescript": "7.10.1",
+    "prettier": "3.5.3",
+    "typescript": "5.8.3",
+    "vitest": "3.2.4"
+  },
+  "packageManager": "pnpm@10.12.1"
+}

@@ -1,5 +1,12 @@
 # Dashboard Architecture
 
+The dashboard is the operator surface for the Mikozi domains defined by the
+backend. Its feature folders use the same vocabulary and module order:
+`identity`, `access-control`, `taxonomy`, `media`, `newsroom`, `audience`,
+`feeds`, `advertising`, `distribution`, and `analytics`. It consumes generated
+REST/OpenAPI contracts and does not reproduce backend permissions, workflow
+transitions, targeting decisions, or publication rules.
+
 ## Directory target
 
 ```text
@@ -51,6 +58,13 @@ Unknown flags hide dependent UI. Server-side route authorization still runs on d
 
 Use semantic tokens and composable primitives so the visual language can change without rewriting feature behavior. Establish accessibility and responsive behavior in primitives. Tables support URL-backed filters, pagination, loading/empty/error states, export status, and stable row identity.
 
+The operator shell uses the native Apple system font stack, the supplied Mikozi
+mark, and a compact icon-led navigation model. Desktop operators can collapse
+or expand the sidebar; that device-local presentation preference contains no
+authorization or identity state. Mobile uses the same navigation semantics in
+a reduced top bar. Empty, loading, error, and not-found states remain
+dashboard-native rather than switching to a marketing-page layout.
+
 ## Real-time and operations
 
 Use the shared authenticated socket client only for genuinely live workflows. Reconnect with bounded backoff, restore rooms, reconcile with a fresh REST request after reconnect, and surface stale/offline state. Administrative REST commands return durable IDs/status when work continues asynchronously, with sockets reporting progress.
@@ -58,6 +72,25 @@ Use the shared authenticated socket client only for genuinely live workflows. Re
 ## REST client
 
 The backend OpenAPI document generates the dashboard client and transport types. Server-only wrappers attach credentials and correlation headers; browser wrappers use the approved session mechanism. Endpoint adapters translate transport errors into stable feature errors. URL-backed filters map consistently to REST pagination, search, filter, and sort parameters.
+
+## Authentication boundary
+
+The browser calls same-origin route handlers for phone OTP, profile
+reconciliation, and logout. Those handlers are a narrow backend-for-frontend
+boundary: they forward canonical backend REST commands and never reproduce
+identity rules. Access and refresh JWTs are stored only in secure, HttpOnly
+cookies. `auth/me` attempts one refresh-token rotation after an expired access
+token, stores the rotated pair, and retries the authoritative profile read.
+Concurrent refresh attempts in one dashboard instance are coalesced briefly so
+development-mode reconciliation, multiple components, or adjacent browser
+requests cannot replay a token that another request just rotated. Transient
+timeouts, rate limits, and upstream 5xx responses preserve both cookies; only
+authoritative invalid, expired, revoked, or forbidden responses clear them.
+
+Protected layouts perform an early server-side cookie-presence redirect, then
+reconcile the session through `auth/me` before rendering private content.
+Profiles without backend-provided `adminAccess` fail closed. The only remembered
+browser value is an optional phone number.
 
 ## Testing
 

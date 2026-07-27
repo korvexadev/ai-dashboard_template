@@ -1,7 +1,61 @@
-# Dashboard Template
+# Mikozi Dashboard
 
-Next.js operations and administration client. It follows the same domain vocabulary and API contracts as the backend while allowing UI experimentation behind a stable design-system and accessibility boundary.
+The operator workspace for Mikozi. It is a Next.js App Router application that
+uses the backend's versioned REST/OpenAPI contract. The browser talks to local
+route handlers for authentication so access and refresh tokens remain in
+HttpOnly cookies.
 
-Recommended foundation: Next.js App Router, TypeScript strict mode, React, an OpenAPI-generated REST client, a shared authenticated socket client, Tailwind, a tokenized component system, schema validation, and a modern test runner plus Playwright.
+## Run in Docker
 
-All product reads and commands use versioned REST endpoints. Sockets provide live operational updates, chat, presence, locations, and background-operation progress. REST/OpenAPI is the only client API contract in this template.
+The backend development app must be available on port `9289`.
+
+```sh
+docker compose build --no-cache app-development
+docker compose up -d app-development
+```
+
+Open `http://localhost:3000/auth`. Production and staging use the same runtime
+image:
+
+```sh
+docker compose build --no-cache app
+docker compose up -d app
+
+docker compose build --no-cache app-staging
+docker compose up -d app-staging
+```
+
+Override `MIKOZI_API_URL` when the backend is not reachable at
+`http://host.docker.internal:9289/api/v1`.
+
+## Run the UI on the host
+
+Keep the backend and infrastructure containerized, then run only the Next.js
+development UI on macOS:
+
+```sh
+cd ../backend
+docker compose up -d postgres redis meilisearch app-development
+
+cd ../dashboard
+pnpm install
+pnpm dev
+```
+
+Host development uses `MIKOZI_API_URL=http://localhost:9289/api/v1`. Do not run
+the dashboard `app-development` container at the same time because both modes
+claim port `3000`.
+
+## Quality gates
+
+```sh
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm api:check
+pnpm build
+```
+
+Run `pnpm api:generate` after an intentional backend OpenAPI change. Generated
+transport types in `src/lib/api/generated.ts` are never edited manually.
