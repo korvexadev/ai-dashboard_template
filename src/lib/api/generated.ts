@@ -100,6 +100,22 @@ export interface paths {
         patch: operations["ProfileController_update"];
         trace?: never;
     };
+    "/api/v1/dashboard-users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DashboardUserController_list"];
+        put?: never;
+        post: operations["DashboardUserController_provision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/articles": {
         parameters: {
             query?: never;
@@ -197,6 +213,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/analytics/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OverviewAnalyticsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audience/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AudienceController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audience/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AudienceController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audience/users/{id}/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["AudienceController_assignSubscription"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscription-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SubscriptionPlanController_list"];
+        put?: never;
+        post: operations["SubscriptionPlanController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscription-plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["SubscriptionPlanController_update"];
+        trace?: never;
+    };
+    "/api/v1/subscriptions/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReaderSubscriptionController_getMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reader/articles/slug/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReaderArticleController_read"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -223,7 +367,7 @@ export interface components {
         };
         AdminAccessResponseDto: {
             /** @enum {string} */
-            role: "super_admin";
+            role: "admin" | "super_admin";
             /**
              * @example [
              *       "*"
@@ -280,6 +424,30 @@ export interface components {
             avatarUrl?: string | null;
             /** @enum {string} */
             preferredLanguage?: "en" | "ny";
+        };
+        DashboardUserResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            readerId: string;
+            /** @example 265991234567 */
+            phoneNumber: string;
+            displayName: string | null;
+            /** @enum {string} */
+            role: "admin" | "super_admin";
+            /** @enum {string} */
+            status: "active" | "disabled";
+            /** Format: date-time */
+            createdAt: string;
+        };
+        DashboardUserCollectionResponseDto: {
+            items: components["schemas"]["DashboardUserResponseDto"][];
+            total: number;
+        };
+        ProvisionDashboardUserDto: {
+            /** @example 0991234567 */
+            phoneNumber: string;
+            displayName?: string;
         };
         ArticleAuthorResponseDto: {
             /** Format: uuid */
@@ -413,6 +581,170 @@ export interface components {
         AuditLogCollectionResponseDto: {
             items: components["schemas"]["AuditLogResponseDto"][];
             total: number;
+        };
+        ArticleAnalyticsDto: {
+            total: number;
+            draft: number;
+            published: number;
+            archived: number;
+            createdLast7Days: number;
+            publishedLast7Days: number;
+        };
+        IdentityAnalyticsDto: {
+            totalReaders: number;
+            readersJoinedLast7Days: number;
+            activeDashboardUsers: number;
+            activeSessions: number;
+        };
+        SubscriptionAnalyticsDto: {
+            activePlans: number;
+            paidSubscribers: number;
+            freeReaders: number;
+            articleReadsToday: number;
+        };
+        OperationsAnalyticsDto: {
+            totalArticleRevisions: number;
+            activityLast24Hours: number;
+        };
+        OverviewAnalyticsResponseDto: {
+            articles: components["schemas"]["ArticleAnalyticsDto"];
+            identity: components["schemas"]["IdentityAnalyticsDto"];
+            subscriptions: components["schemas"]["SubscriptionAnalyticsDto"];
+            operations: components["schemas"]["OperationsAnalyticsDto"];
+        };
+        EntitlementPlanResponseDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            description: string | null;
+            /** @enum {string} */
+            planType: "free" | "paid";
+            /** @enum {string} */
+            billingPeriod: "none" | "monthly" | "yearly";
+            priceMinor: number;
+            currency: string;
+            dailyArticleLimit: number | null;
+            /** @enum {string} */
+            status: "active" | "inactive";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ReaderEntitlementResponseDto: {
+            plan: components["schemas"]["EntitlementPlanResponseDto"];
+            /** @enum {string} */
+            source: "free" | "assigned";
+            /** Format: uuid */
+            subscriptionId: string | null;
+            /** Format: date-time */
+            startsAt: string | null;
+            /** Format: date-time */
+            endsAt: string | null;
+            articlesReadToday: number;
+            articlesRemainingToday: number | null;
+            administratorBypass: boolean;
+            /** Format: date-time */
+            resetsAt: string;
+        };
+        AudienceUserSummaryResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @example 265991234567 */
+            phoneNumber: string;
+            displayName: string | null;
+            avatarUrl: string | null;
+            preferredLanguage: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** @enum {string|null} */
+            adminRole: "admin" | "super_admin" | null;
+            activeSessions: number;
+            /** Format: date-time */
+            lastActiveAt: string | null;
+            entitlement: components["schemas"]["ReaderEntitlementResponseDto"];
+        };
+        AudienceUserCollectionResponseDto: {
+            items: components["schemas"]["AudienceUserSummaryResponseDto"][];
+            total: number;
+        };
+        AudienceUserDetailResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @example 265991234567 */
+            phoneNumber: string;
+            displayName: string | null;
+            avatarUrl: string | null;
+            preferredLanguage: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** @enum {string|null} */
+            adminRole: "admin" | "super_admin" | null;
+            activeSessions: number;
+            /** Format: date-time */
+            lastActiveAt: string | null;
+            entitlement: components["schemas"]["ReaderEntitlementResponseDto"];
+            bio: string | null;
+            /** Format: date-time */
+            phoneVerifiedAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AssignReaderSubscriptionDto: {
+            /** Format: uuid */
+            planId: string;
+        };
+        SubscriptionPlanResponseDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            description: string | null;
+            /** @enum {string} */
+            planType: "free" | "paid";
+            /** @enum {string} */
+            billingPeriod: "none" | "monthly" | "yearly";
+            priceMinor: number;
+            currency: string;
+            dailyArticleLimit: number | null;
+            /** @enum {string} */
+            status: "active" | "inactive";
+            subscriberCount: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        SubscriptionPlanCollectionResponseDto: {
+            items: components["schemas"]["SubscriptionPlanResponseDto"][];
+        };
+        CreateSubscriptionPlanDto: {
+            /** @example mikozi-plus */
+            code: string;
+            /** @example Mikozi Plus */
+            name: string;
+            description?: string;
+            /** @enum {string} */
+            billingPeriod: "monthly" | "yearly";
+            /** @description Price in integer minor units. */
+            priceMinor: number;
+            /** @example MWK */
+            currency: string;
+            /** @description Null means unlimited. */
+            dailyArticleLimit?: number | null;
+        };
+        UpdateSubscriptionPlanDto: {
+            name?: string;
+            description?: string | null;
+            /** @enum {string} */
+            billingPeriod?: "none" | "monthly" | "yearly";
+            priceMinor?: number;
+            /** @example MWK */
+            currency?: string;
+            dailyArticleLimit?: number | null;
+            /** @enum {string} */
+            status?: "active" | "inactive";
         };
     };
     responses: never;
@@ -587,6 +919,57 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["ProfileResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    DashboardUserController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DashboardUserCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    DashboardUserController_provision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProvisionDashboardUserDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DashboardUserResponseDto"];
                         meta: components["schemas"]["ApiMetaDto"];
                     };
                 };
@@ -812,6 +1195,232 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    OverviewAnalyticsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OverviewAnalyticsResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    AudienceController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                search?: string;
+                access?: "all" | "reader" | "admin";
+                planId?: string;
+                sortBy?: "displayName" | "createdAt" | "lastActiveAt";
+                sortDirection?: "asc" | "desc";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AudienceUserCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    AudienceController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AudienceUserDetailResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    AudienceController_assignSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignReaderSubscriptionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReaderEntitlementResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    SubscriptionPlanController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SubscriptionPlanCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    SubscriptionPlanController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSubscriptionPlanDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SubscriptionPlanResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    SubscriptionPlanController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSubscriptionPlanDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SubscriptionPlanResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReaderSubscriptionController_getMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReaderEntitlementResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReaderArticleController_read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ArticleResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
             };
         };
     };

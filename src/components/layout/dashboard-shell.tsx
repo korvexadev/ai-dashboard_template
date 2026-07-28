@@ -13,16 +13,33 @@ const navigation: Array<{
   icon: IconName;
   href: string;
   available: boolean;
+  superAdminOnly?: boolean;
 }> = [
   { label: "Overview", icon: "dashboard", href: "/", available: true },
   { label: "Articles", icon: "articles", href: "/articles", available: true },
+  { label: "Audience", icon: "users", href: "/audience", available: true },
+  {
+    label: "Subscriptions",
+    icon: "bell",
+    href: "/subscriptions",
+    available: true,
+  },
+  { label: "Transactions", icon: "advert", href: "#", available: false },
   { label: "Media library", icon: "media", href: "#", available: false },
-  { label: "Audience", icon: "users", href: "#", available: false },
+  { label: "Notifications", icon: "bell", href: "#", available: false },
+  {
+    label: "Dashboard users",
+    icon: "settings",
+    href: "/users",
+    available: true,
+    superAdminOnly: true,
+  },
   {
     label: "Activity log",
     icon: "activity",
     href: "/audit-logs",
     available: true,
+    superAdminOnly: true,
   },
 ];
 
@@ -112,34 +129,40 @@ export function DashboardShell({ children, profile }: DashboardShellProps) {
         <nav aria-label="Primary navigation">
           <p className="nav-label">Newsroom</p>
           <ul>
-            {navigation.map((item) => (
-              <li key={item.label}>
-                <Link
-                  className={
-                    item.available
-                      ? isActive(pathname, item.href)
-                        ? "active"
-                        : undefined
-                      : "coming-soon"
-                  }
-                  href={item.href}
-                  aria-disabled={!item.available}
-                  tabIndex={item.available ? undefined : -1}
-                  onClick={
-                    item.available
-                      ? undefined
-                      : (event) => event.preventDefault()
-                  }
-                  title={
-                    item.available ? undefined : "Coming in a later module"
-                  }
-                >
-                  <Icon name={item.icon} />
-                  <span>{item.label}</span>
-                  {!item.available ? <small>Soon</small> : null}
-                </Link>
-              </li>
-            ))}
+            {navigation
+              .filter(
+                (item) =>
+                  !item.superAdminOnly ||
+                  profile.adminAccess?.role === "super_admin",
+              )
+              .map((item) => (
+                <li key={item.label}>
+                  <Link
+                    className={
+                      item.available
+                        ? isActive(pathname, item.href)
+                          ? "active"
+                          : undefined
+                        : "coming-soon"
+                    }
+                    href={item.href}
+                    aria-disabled={!item.available}
+                    tabIndex={item.available ? undefined : -1}
+                    onClick={
+                      item.available
+                        ? undefined
+                        : (event) => event.preventDefault()
+                    }
+                    title={
+                      item.available ? undefined : "Coming in a later module"
+                    }
+                  >
+                    <Icon name={item.icon} />
+                    <span>{item.label}</span>
+                    {!item.available ? <small>Soon</small> : null}
+                  </Link>
+                </li>
+              ))}
           </ul>
         </nav>
 

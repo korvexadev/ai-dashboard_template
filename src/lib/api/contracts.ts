@@ -19,6 +19,31 @@ export type CreateArticleSection =
 export type AuditLog = components["schemas"]["AuditLogResponseDto"];
 export type AuditLogCollection =
   components["schemas"]["AuditLogCollectionResponseDto"];
+export type OverviewAnalytics =
+  components["schemas"]["OverviewAnalyticsResponseDto"];
+export type DashboardUser = components["schemas"]["DashboardUserResponseDto"];
+export type DashboardUserCollection =
+  components["schemas"]["DashboardUserCollectionResponseDto"];
+export type ProvisionDashboardUser =
+  components["schemas"]["ProvisionDashboardUserDto"];
+export type AudienceUserSummary =
+  components["schemas"]["AudienceUserSummaryResponseDto"];
+export type AudienceUserDetail =
+  components["schemas"]["AudienceUserDetailResponseDto"];
+export type AudienceUserCollection =
+  components["schemas"]["AudienceUserCollectionResponseDto"];
+export type ReaderEntitlement =
+  components["schemas"]["ReaderEntitlementResponseDto"];
+export type AssignReaderSubscription =
+  components["schemas"]["AssignReaderSubscriptionDto"];
+export type SubscriptionPlan =
+  components["schemas"]["SubscriptionPlanResponseDto"];
+export type SubscriptionPlanCollection =
+  components["schemas"]["SubscriptionPlanCollectionResponseDto"];
+export type CreateSubscriptionPlan =
+  components["schemas"]["CreateSubscriptionPlanDto"];
+export type UpdateSubscriptionPlan =
+  components["schemas"]["UpdateSubscriptionPlanDto"];
 
 export interface ApiEnvelope<T> {
   data: T;

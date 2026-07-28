@@ -35,9 +35,20 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 
 - [x] `done` Build admin phone OTP sign-in, JWT refresh/logout, protected layouts,
       and safe expired/revoked-session recovery.
+- [x] `done` Build super-admin dashboard-user listing and phone-based
+      provisioning with OTP and cross-client identity guidance.
 - [ ] `pending` Build permission-aware navigation, direct-route guards, roles,
       permission assignments, exceptions, and audit history.
 - [ ] `pending` Pass the shared identity/access acceptance journey with backend.
+
+### Dashboard user provisioning acceptance criteria
+
+- Super administrators can list and add dashboard administrators by Malawi
+  phone number without exposing token or OTP material.
+- The UI explains that provisioning grants dashboard authority but the user
+  must still prove possession through the normal OTP login.
+- Ordinary administrators can use both mobile and dashboard sign-in but cannot
+  provision or enumerate other dashboard users.
 
 ### Authentication slice acceptance criteria
 
@@ -118,11 +129,28 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 
 ## 4. Reader discovery and audience preferences
 
+- [x] `done` Build the searchable audience directory, reader detail,
+      effective subscription inspection, plan management, and manual plan
+      assignment.
 - [ ] `pending` Build homepage/feed curation, editorial priority controls, safe
       audience-policy preview, and explainable placement inspection.
 - [ ] `pending` Build consent-aware segment administration without exposing raw
       protected reader attributes.
 - [ ] `pending` Pass the shared discovery/personalization journey.
+
+### Audience and subscription acceptance criteria
+
+- Audience navigation opens a URL-filtered, sortable, paginated reader table
+  backed by the canonical REST read model.
+- Reader detail shows operational identity, administrator access, session
+  activity, effective plan, and today’s article allowance without inventing
+  engagement history.
+- Subscription management always shows the protected free plan and lets a super
+  administrator customize its daily article limit or create and update paid
+  plans.
+- Super administrators can assign an active plan from reader detail. Loading,
+  empty, failure, validation, authorization, and mutation states preserve the
+  current dashboard visual system.
 
 ## 5. Advertising
 
@@ -152,8 +180,20 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 
 ## 8. Analytics, operations, and hardening
 
+- [x] `done` Replace overview placeholders with the authenticated operational
+      analytics read model and prepare upcoming module navigation.
 - [ ] `pending` Build privacy-safe editorial/commercial analytics, audited
       exports, system health, job/reconciliation views, and operational controls.
 - [ ] `pending` Complete accessibility, security, recovery, browser,
       performance, and production-readiness gates.
 - [ ] `pending` Pass the final cross-application production-readiness journey.
+
+### Operational overview analytics acceptance criteria
+
+- Overview cards and breakdowns use the authenticated analytics REST read model,
+  with loading, failure, and refresh states.
+- Implemented article, identity, administrator, session, revision, and activity
+  metrics replace module-status placeholders.
+- Audience and Subscriptions are live. Upcoming Transactions, Media Library,
+  and Notifications remain visible in navigation as clearly unavailable
+  modules.
