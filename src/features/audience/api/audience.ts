@@ -1,8 +1,25 @@
 import type {
   AudienceUserCollection,
   AudienceUserDetail,
+  AudienceUserStatus,
+  CommentActivityCollection,
+  LikeActivityCollection,
   ReaderEntitlement,
+  SubscriptionActivityCollection,
+  TransactionActivityCollection,
 } from "@/lib/api/contracts";
+
+export type AudienceHistoryCategory =
+  | "comments"
+  | "likes"
+  | "subscriptions"
+  | "transactions";
+
+export type AudienceHistoryCollection =
+  | CommentActivityCollection
+  | LikeActivityCollection
+  | SubscriptionActivityCollection
+  | TransactionActivityCollection;
 
 export function listAudience(
   query: URLSearchParams,
@@ -29,6 +46,39 @@ export function assignAudienceSubscription(
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ planId }),
     },
+  );
+}
+
+export function updateAudienceUserStatus(
+  id: string,
+  status: "active" | "disabled",
+): Promise<AudienceUserStatus> {
+  return request<AudienceUserStatus>(
+    `/api/audience/users/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ status }),
+    },
+  );
+}
+
+export async function deleteAudienceUser(id: string): Promise<void> {
+  const response = await fetch(
+    `/api/audience/users/${encodeURIComponent(id)}`,
+    { method: "DELETE", cache: "no-store" },
+  );
+  if (response.ok) return;
+  const body = (await response.json()) as { error?: { message?: string } };
+  throw new Error(body.error?.message ?? "The account could not be deleted.");
+}
+
+export function getAudienceHistory(
+  id: string,
+  category: AudienceHistoryCategory,
+): Promise<AudienceHistoryCollection> {
+  return request<AudienceHistoryCollection>(
+    `/api/audience/users/${encodeURIComponent(id)}/history/${category}?limit=25&offset=0`,
   );
 }
 

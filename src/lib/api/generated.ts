@@ -255,10 +255,90 @@ export interface paths {
         get: operations["AudienceController_get"];
         put?: never;
         post?: never;
+        delete: operations["AudienceController_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audience/users/{id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AudienceController_comments"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audience/users/{id}/likes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AudienceController_likes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audience/users/{id}/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AudienceController_subscriptionHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audience/users/{id}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AudienceController_transactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audience/users/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AudienceController_changeStatus"];
         trace?: never;
     };
     "/api/v1/audience/users/{id}/subscription": {
@@ -339,6 +419,70 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media-assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MediaController_list"];
+        put?: never;
+        post: operations["MediaController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media-assets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MediaController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["MediaController_update"];
+        trace?: never;
+    };
+    "/api/v1/notification-drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NotificationDraftController_list"];
+        put?: never;
+        post: operations["NotificationDraftController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notification-drafts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NotificationDraftController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["NotificationDraftController_update"];
         trace?: never;
     };
 }
@@ -595,12 +739,24 @@ export interface components {
             readersJoinedLast7Days: number;
             activeDashboardUsers: number;
             activeSessions: number;
+            disabledReaders: number;
         };
         SubscriptionAnalyticsDto: {
             activePlans: number;
             paidSubscribers: number;
             freeReaders: number;
             articleReadsToday: number;
+            transactionsRecorded: number;
+        };
+        EngagementAnalyticsDto: {
+            comments: number;
+            likes: number;
+        };
+        ContentOperationsAnalyticsDto: {
+            readyMediaAssets: number;
+            archivedMediaAssets: number;
+            notificationDrafts: number;
+            cancelledNotificationDrafts: number;
         };
         OperationsAnalyticsDto: {
             totalArticleRevisions: number;
@@ -610,6 +766,8 @@ export interface components {
             articles: components["schemas"]["ArticleAnalyticsDto"];
             identity: components["schemas"]["IdentityAnalyticsDto"];
             subscriptions: components["schemas"]["SubscriptionAnalyticsDto"];
+            engagement: components["schemas"]["EngagementAnalyticsDto"];
+            contentOperations: components["schemas"]["ContentOperationsAnalyticsDto"];
             operations: components["schemas"]["OperationsAnalyticsDto"];
         };
         EntitlementPlanResponseDto: {
@@ -656,6 +814,8 @@ export interface components {
             displayName: string | null;
             avatarUrl: string | null;
             preferredLanguage: string;
+            /** @enum {string} */
+            status: "active" | "disabled";
             /** Format: date-time */
             createdAt: string;
             /** @enum {string|null} */
@@ -677,6 +837,8 @@ export interface components {
             displayName: string | null;
             avatarUrl: string | null;
             preferredLanguage: string;
+            /** @enum {string} */
+            status: "active" | "disabled";
             /** Format: date-time */
             createdAt: string;
             /** @enum {string|null} */
@@ -690,6 +852,99 @@ export interface components {
             phoneVerifiedAt: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        ActivityArticleResponseDto: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            title: string;
+        };
+        CommentActivityResponseDto: {
+            /** Format: uuid */
+            id: string;
+            article: components["schemas"]["ActivityArticleResponseDto"];
+            /** Format: date-time */
+            createdAt: string;
+            body: string;
+            /** @enum {string} */
+            status: "active" | "hidden" | "deleted";
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CommentActivityCollectionResponseDto: {
+            items: components["schemas"]["CommentActivityResponseDto"][];
+            total: number;
+        };
+        LikeActivityResponseDto: {
+            /** Format: uuid */
+            id: string;
+            article: components["schemas"]["ActivityArticleResponseDto"];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        LikeActivityCollectionResponseDto: {
+            items: components["schemas"]["LikeActivityResponseDto"][];
+            total: number;
+        };
+        ActivityPlanResponseDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        ActivityActorResponseDto: {
+            /** Format: uuid */
+            id: string;
+            displayName: string | null;
+        };
+        SubscriptionActivityResponseDto: {
+            /** Format: uuid */
+            id: string;
+            plan: components["schemas"]["ActivityPlanResponseDto"];
+            /** @enum {string} */
+            status: "active" | "canceled" | "expired";
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string | null;
+            /** Format: date-time */
+            assignedAt: string;
+            assignedBy: components["schemas"]["ActivityActorResponseDto"];
+        };
+        SubscriptionActivityCollectionResponseDto: {
+            items: components["schemas"]["SubscriptionActivityResponseDto"][];
+            total: number;
+        };
+        TransactionActivityResponseDto: {
+            /** Format: uuid */
+            id: string;
+            plan: components["schemas"]["ActivityPlanResponseDto"];
+            /** Format: uuid */
+            subscriptionId: string | null;
+            /** @enum {string} */
+            type: "charge" | "refund";
+            /** @enum {string} */
+            status: "pending" | "succeeded" | "failed" | "refunded";
+            amountMinor: number;
+            currency: string;
+            /** Format: date-time */
+            occurredAt: string;
+        };
+        TransactionActivityCollectionResponseDto: {
+            items: components["schemas"]["TransactionActivityResponseDto"][];
+            total: number;
+        };
+        AudienceUserStatusResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "active" | "disabled";
+            /** Format: date-time */
+            deletedAt: string | null;
+        };
+        UpdateAudienceUserStatusDto: {
+            /** @enum {string} */
+            status: "active" | "disabled";
         };
         AssignReaderSubscriptionDto: {
             /** Format: uuid */
@@ -745,6 +1000,154 @@ export interface components {
             dailyArticleLimit?: number | null;
             /** @enum {string} */
             status?: "active" | "inactive";
+        };
+        MediaCreatorResponseDto: {
+            /** Format: uuid */
+            id: string;
+            displayName: string | null;
+        };
+        MediaAssetResponseDto: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            altText: string;
+            caption: string | null;
+            /** Format: uri */
+            sourceUrl: string;
+            /** @enum {string} */
+            mimeType: "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+            fileName: string;
+            sizeBytes: number | null;
+            width: number | null;
+            height: number | null;
+            rightsHolder: string | null;
+            /** Format: date-time */
+            rightsExpiresAt: string | null;
+            /** @enum {string} */
+            status: "ready" | "archived";
+            createdBy: components["schemas"]["MediaCreatorResponseDto"];
+            /** Format: date-time */
+            archivedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        MediaAssetCollectionResponseDto: {
+            items: components["schemas"]["MediaAssetResponseDto"][];
+            total: number;
+        };
+        CreateMediaAssetDto: {
+            title: string;
+            altText: string;
+            caption?: string | null;
+            /** Format: uri */
+            sourceUrl: string;
+            /** @enum {string} */
+            mimeType: "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+            fileName: string;
+            sizeBytes?: number | null;
+            width?: number | null;
+            height?: number | null;
+            rightsHolder?: string | null;
+            /** Format: date-time */
+            rightsExpiresAt?: string | null;
+        };
+        UpdateMediaAssetDto: {
+            title?: string;
+            altText?: string;
+            caption?: string | null;
+            /** Format: uri */
+            sourceUrl?: string;
+            /** @enum {string} */
+            mimeType?: "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+            fileName?: string;
+            sizeBytes?: number | null;
+            width?: number | null;
+            height?: number | null;
+            rightsHolder?: string | null;
+            /** Format: date-time */
+            rightsExpiresAt?: string | null;
+            /** @enum {string} */
+            status?: "ready" | "archived";
+        };
+        NotificationImageResponseDto: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /** Format: uri */
+            sourceUrl: string;
+        };
+        NotificationCreatorResponseDto: {
+            /** Format: uuid */
+            id: string;
+            displayName: string | null;
+        };
+        NotificationDraftResponseDto: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            body: string;
+            /** @enum {string} */
+            priority: "low" | "normal" | "high" | "urgent";
+            /** @enum {string} */
+            targetType: "all_readers" | "dashboard_users" | "specific_readers";
+            targetReaderIds: string[];
+            /** @enum {string} */
+            channel: "push";
+            imageAsset: components["schemas"]["NotificationImageResponseDto"] | null;
+            actionUrl: string | null;
+            /** Format: date-time */
+            scheduledAt: string | null;
+            /** @enum {string} */
+            status: "draft" | "cancelled";
+            /** @enum {boolean} */
+            deliveryConnected: false;
+            createdBy: components["schemas"]["NotificationCreatorResponseDto"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        NotificationDraftCollectionResponseDto: {
+            items: components["schemas"]["NotificationDraftResponseDto"][];
+            total: number;
+        };
+        CreateNotificationDraftDto: {
+            title: string;
+            body: string;
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            priority: "low" | "normal" | "high" | "urgent";
+            /** @enum {string} */
+            targetType: "all_readers" | "dashboard_users" | "specific_readers";
+            targetReaderIds?: string[];
+            /** Format: uuid */
+            imageAssetId?: string | null;
+            actionUrl?: string | null;
+            /** Format: date-time */
+            scheduledAt?: string | null;
+        };
+        UpdateNotificationDraftDto: {
+            title?: string;
+            body?: string;
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            priority: "low" | "normal" | "high" | "urgent";
+            /** @enum {string} */
+            targetType?: "all_readers" | "dashboard_users" | "specific_readers";
+            targetReaderIds?: string[];
+            /** Format: uuid */
+            imageAssetId?: string | null;
+            actionUrl?: string | null;
+            /** Format: date-time */
+            scheduledAt?: string | null;
+            /** @enum {string} */
+            status?: "draft" | "cancelled";
         };
     };
     responses: never;
@@ -1274,6 +1677,161 @@ export interface operations {
             };
         };
     };
+    AudienceController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AudienceController_comments: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CommentActivityCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    AudienceController_likes: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LikeActivityCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    AudienceController_subscriptionHistory: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SubscriptionActivityCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    AudienceController_transactions: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TransactionActivityCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    AudienceController_changeStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAudienceUserStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AudienceUserStatusResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
     AudienceController_assignSubscription: {
         parameters: {
             query?: never;
@@ -1418,6 +1976,219 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["ArticleResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    MediaController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                search?: string;
+                status?: "ready" | "archived";
+                mimeType?: "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaAssetCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    MediaController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMediaAssetDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaAssetResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    MediaController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaAssetResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    MediaController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMediaAssetDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MediaAssetResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    NotificationDraftController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                search?: string;
+                status?: "draft" | "cancelled";
+                priority?: "low" | "normal" | "high" | "urgent";
+                targetType?: "all_readers" | "dashboard_users" | "specific_readers";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NotificationDraftCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    NotificationDraftController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateNotificationDraftDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NotificationDraftResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    NotificationDraftController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NotificationDraftResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    NotificationDraftController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNotificationDraftDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NotificationDraftResponseDto"];
                         meta: components["schemas"]["ApiMetaDto"];
                     };
                 };

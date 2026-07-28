@@ -32,6 +32,25 @@ export type AudienceUserDetail =
   components["schemas"]["AudienceUserDetailResponseDto"];
 export type AudienceUserCollection =
   components["schemas"]["AudienceUserCollectionResponseDto"];
+export type AudienceUserStatus =
+  components["schemas"]["AudienceUserStatusResponseDto"];
+export type UpdateAudienceUserStatus =
+  components["schemas"]["UpdateAudienceUserStatusDto"];
+export type CommentActivity =
+  components["schemas"]["CommentActivityResponseDto"];
+export type CommentActivityCollection =
+  components["schemas"]["CommentActivityCollectionResponseDto"];
+export type LikeActivity = components["schemas"]["LikeActivityResponseDto"];
+export type LikeActivityCollection =
+  components["schemas"]["LikeActivityCollectionResponseDto"];
+export type SubscriptionActivity =
+  components["schemas"]["SubscriptionActivityResponseDto"];
+export type SubscriptionActivityCollection =
+  components["schemas"]["SubscriptionActivityCollectionResponseDto"];
+export type TransactionActivity =
+  components["schemas"]["TransactionActivityResponseDto"];
+export type TransactionActivityCollection =
+  components["schemas"]["TransactionActivityCollectionResponseDto"];
 export type ReaderEntitlement =
   components["schemas"]["ReaderEntitlementResponseDto"];
 export type AssignReaderSubscription =
@@ -44,6 +63,19 @@ export type CreateSubscriptionPlan =
   components["schemas"]["CreateSubscriptionPlanDto"];
 export type UpdateSubscriptionPlan =
   components["schemas"]["UpdateSubscriptionPlanDto"];
+export type MediaAsset = components["schemas"]["MediaAssetResponseDto"];
+export type MediaAssetCollection =
+  components["schemas"]["MediaAssetCollectionResponseDto"];
+export type CreateMediaAsset = components["schemas"]["CreateMediaAssetDto"];
+export type UpdateMediaAsset = components["schemas"]["UpdateMediaAssetDto"];
+export type NotificationDraft =
+  components["schemas"]["NotificationDraftResponseDto"];
+export type NotificationDraftCollection =
+  components["schemas"]["NotificationDraftCollectionResponseDto"];
+export type CreateNotificationDraft =
+  components["schemas"]["CreateNotificationDraftDto"];
+export type UpdateNotificationDraft =
+  components["schemas"]["UpdateNotificationDraftDto"];
 
 export interface ApiEnvelope<T> {
   data: T;

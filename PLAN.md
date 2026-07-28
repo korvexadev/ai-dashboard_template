@@ -72,8 +72,10 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 
 - [ ] `pending` Build section/topic/tag management with stable slugs and
       compatible edits.
-- [ ] `pending` Build media upload, processing state, rights, caption, alt text,
-      rendition, usage, and failure recovery.
+- [x] `done` Build the searchable media registry with URL registration, caption,
+      alt text, dimensions, rights metadata, and archive/restore.
+- [ ] `in_progress` Connect binary upload, processing state, renditions, usage,
+      and storage failure recovery.
 - [ ] `pending` Pass the shared taxonomy/media acceptance journey.
 
 ## 3. Newsroom publishing
@@ -132,6 +134,8 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 - [x] `done` Build the searchable audience directory, reader detail,
       effective subscription inspection, plan management, and manual plan
       assignment.
+- [x] `done` Build super-admin account moderation and persisted reader
+      comment, like, subscription, and transaction histories.
 - [ ] `pending` Build homepage/feed curation, editorial priority controls, safe
       audience-policy preview, and explainable placement inspection.
 - [ ] `pending` Build consent-aware segment administration without exposing raw
@@ -151,6 +155,11 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 - Super administrators can assign an active plan from reader detail. Loading,
   empty, failure, validation, authorization, and mutation states preserve the
   current dashboard visual system.
+- Reader detail lets a super administrator disable, reactivate, or explicitly
+  confirm soft deletion of an account and shows only server-confirmed results.
+- Comment, like, subscription-assignment, and transaction tabs read canonical,
+  paginated REST history. Unimplemented mobile/payment creation flows produce
+  clear empty states rather than invented events or totals.
 
 ## 5. Advertising
 
@@ -171,6 +180,9 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 
 ## 7. Distribution, deep links, and notifications
 
+- [x] `done` Build notification draft creation, listing, targeting, priority,
+      optional media/action metadata, and cancellation with explicit unsent
+      states.
 - [ ] `pending` Build canonical-link management, link resolution diagnostics,
       breaking-news approval, notification operations, syndication status, and
       delivery reconciliation.
@@ -194,6 +206,5 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
   with loading, failure, and refresh states.
 - Implemented article, identity, administrator, session, revision, and activity
   metrics replace module-status placeholders.
-- Audience and Subscriptions are live. Upcoming Transactions, Media Library,
-  and Notifications remain visible in navigation as clearly unavailable
-  modules.
+- Audience, Subscriptions, Media Library, and persisted Notification Drafts are
+  live. Transactions remains visible as an unavailable module.

@@ -195,6 +195,36 @@ export function OverviewDashboard() {
               value={analytics?.subscriptions.paidSubscribers}
               detail="currently active"
             />
+            <PulseRow
+              label="Comments"
+              value={analytics?.engagement.comments}
+              detail="persisted"
+            />
+            <PulseRow
+              label="Likes"
+              value={analytics?.engagement.likes}
+              detail="persisted"
+            />
+            <PulseRow
+              label="Transactions"
+              value={analytics?.subscriptions.transactionsRecorded}
+              detail="persisted records"
+            />
+            <PulseRow
+              label="Disabled readers"
+              value={analytics?.identity.disabledReaders}
+              detail="currently disabled"
+            />
+            <PulseRow
+              label="Media assets"
+              value={analytics?.contentOperations.readyMediaAssets}
+              detail="ready for use"
+            />
+            <PulseRow
+              label="Notification drafts"
+              value={analytics?.contentOperations.notificationDrafts}
+              detail="saved, not sent"
+            />
           </div>
         </article>
       </section>

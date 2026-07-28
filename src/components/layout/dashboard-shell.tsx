@@ -25,8 +25,18 @@ const navigation: Array<{
     available: true,
   },
   { label: "Transactions", icon: "advert", href: "#", available: false },
-  { label: "Media library", icon: "media", href: "#", available: false },
-  { label: "Notifications", icon: "bell", href: "#", available: false },
+  {
+    label: "Media library",
+    icon: "media",
+    href: "/media-library",
+    available: true,
+  },
+  {
+    label: "Notifications",
+    icon: "bell",
+    href: "/notifications",
+    available: true,
+  },
   {
     label: "Dashboard users",
     icon: "settings",

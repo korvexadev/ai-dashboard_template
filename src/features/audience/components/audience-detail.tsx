@@ -1,28 +1,53 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons/icon";
 import {
+  deleteAudienceUser,
+  getAudienceHistory,
   assignAudienceSubscription,
   getAudienceUser,
+  updateAudienceUserStatus,
+  type AudienceHistoryCategory,
+  type AudienceHistoryCollection,
 } from "@/features/audience/api/audience";
 import { listSubscriptionPlans } from "@/features/subscriptions/api/subscriptions";
-import type { AudienceUserDetail, SubscriptionPlan } from "@/lib/api/contracts";
+import type {
+  AudienceUserDetail,
+  CommentActivityCollection,
+  LikeActivityCollection,
+  SubscriptionActivityCollection,
+  SubscriptionPlan,
+  TransactionActivityCollection,
+} from "@/lib/api/contracts";
+import { canModerateAudienceUser } from "@/features/audience/policies/audience-actions";
 
 export function AudienceDetail({
   id,
   canManage,
+  currentReaderId,
 }: {
   id: string;
   canManage: boolean;
+  currentReaderId: string;
 }) {
+  const router = useRouter();
   const [user, setUser] = useState<AudienceUserDetail>();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const [error, setError] = useState<string>();
   const [saving, setSaving] = useState(false);
+  const [accountAction, setAccountAction] = useState<
+    "status" | "delete" | undefined
+  >();
+  const [historyCategory, setHistoryCategory] =
+    useState<AudienceHistoryCategory>("comments");
+  const [history, setHistory] = useState<AudienceHistoryCollection>();
+  const [historyError, setHistoryError] = useState<string>();
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
@@ -49,6 +74,29 @@ export function AudienceDetail({
     };
   }, [id, retry]);
 
+  useEffect(() => {
+    let active = true;
+    void getAudienceHistory(id, historyCategory)
+      .then((result) => {
+        if (active) setHistory(result);
+      })
+      .catch((caught: unknown) => {
+        if (active) {
+          setHistoryError(
+            caught instanceof Error
+              ? caught.message
+              : "The user history could not be loaded.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setHistoryLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [historyCategory, id]);
+
   async function assign() {
     if (!user || !selectedPlanId) return;
     setSaving(true);
@@ -67,6 +115,62 @@ export function AudienceDetail({
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function changeAccountStatus() {
+    if (!user) return;
+    const status = user.status === "active" ? "disabled" : "active";
+    if (
+      status === "disabled" &&
+      !window.confirm(
+        `Disable ${user.displayName ?? `+${user.phoneNumber}`}? Every active session will be signed out immediately.`,
+      )
+    ) {
+      return;
+    }
+    setAccountAction("status");
+    setError(undefined);
+    try {
+      const result = await updateAudienceUserStatus(user.id, status);
+      setUser({
+        ...user,
+        status: result.status,
+        activeSessions: status === "disabled" ? 0 : user.activeSessions,
+      });
+    } catch (caught: unknown) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The account status could not be changed.",
+      );
+    } finally {
+      setAccountAction(undefined);
+    }
+  }
+
+  async function removeAccount() {
+    if (!user) return;
+    if (
+      !window.confirm(
+        `Delete ${user.displayName ?? `+${user.phoneNumber}`}? The account will lose access and disappear from Audience. Historical activity will be retained.`,
+      )
+    ) {
+      return;
+    }
+    setAccountAction("delete");
+    setError(undefined);
+    try {
+      await deleteAudienceUser(user.id);
+      router.push("/audience");
+      router.refresh();
+    } catch (caught: unknown) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The account could not be deleted.",
+      );
+      setAccountAction(undefined);
     }
   }
 
@@ -100,6 +204,12 @@ export function AudienceDetail({
   const entitlement = user.entitlement;
   const limit = entitlement.plan.dailyArticleLimit;
   const remaining = entitlement.articlesRemainingToday;
+  const isSelf = user.id === currentReaderId;
+  const canModerate = canModerateAudienceUser(
+    canManage,
+    currentReaderId,
+    user.id,
+  );
 
   return (
     <main className="article-workspace audience-detail-page">
@@ -114,10 +224,42 @@ export function AudienceDetail({
           {initials(user.displayName, user.phoneNumber)}
         </span>
         <div>
-          <span className="access-label">{formatAccess(user.adminRole)}</span>
+          <div className="audience-profile-labels">
+            <span className="access-label">{formatAccess(user.adminRole)}</span>
+            <span className={`account-status account-status-${user.status}`}>
+              {user.status}
+            </span>
+          </div>
           <h2>{user.displayName ?? "Unnamed user"}</h2>
           <p>+{user.phoneNumber}</p>
         </div>
+        {canModerate ? (
+          <div className="account-actions">
+            <button
+              type="button"
+              disabled={Boolean(accountAction)}
+              onClick={() => void changeAccountStatus()}
+            >
+              {accountAction === "status"
+                ? "Updating..."
+                : user.status === "active"
+                  ? "Disable account"
+                  : "Reactivate account"}
+            </button>
+            <button
+              className="danger-action"
+              type="button"
+              disabled={Boolean(accountAction)}
+              onClick={() => void removeAccount()}
+            >
+              {accountAction === "delete" ? "Deleting..." : "Delete account"}
+            </button>
+          </div>
+        ) : isSelf ? (
+          <p className="self-protection-note">
+            Your account is protected from destructive self-actions.
+          </p>
+        ) : null}
       </section>
 
       {error ? (
@@ -258,7 +400,181 @@ export function AudienceDetail({
           )}
         </aside>
       </section>
+
+      <section className="audience-history-section">
+        <header>
+          <div>
+            <p className="eyebrow">User history</p>
+            <h3>Activity and billing record</h3>
+            <p>
+              Persisted events only. Activity that has not happened is not
+              estimated.
+            </p>
+          </div>
+          {history ? (
+            <span className="history-total">
+              {history.total} {history.total === 1 ? "record" : "records"}
+            </span>
+          ) : null}
+        </header>
+        <div className="history-tabs" role="tablist" aria-label="User history">
+          {(
+            [
+              ["comments", "Comments"],
+              ["likes", "Likes"],
+              ["subscriptions", "Subscriptions"],
+              ["transactions", "Transactions"],
+            ] as const
+          ).map(([category, label]) => (
+            <button
+              key={category}
+              type="button"
+              role="tab"
+              aria-selected={historyCategory === category}
+              onClick={() => {
+                if (historyCategory === category) return;
+                setHistory(undefined);
+                setHistoryLoading(true);
+                setHistoryError(undefined);
+                setHistoryCategory(category);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="history-content" role="tabpanel">
+          {historyLoading ? (
+            <div className="history-loading" aria-label="Loading user history">
+              <span />
+              <span />
+              <span />
+            </div>
+          ) : historyError ? (
+            <div className="history-empty" role="alert">
+              <h4>History unavailable</h4>
+              <p>{historyError}</p>
+            </div>
+          ) : (
+            renderHistory(historyCategory, history)
+          )}
+        </div>
+      </section>
     </main>
+  );
+}
+
+function renderHistory(
+  category: AudienceHistoryCategory,
+  history: AudienceHistoryCollection | undefined,
+) {
+  if (!history?.items.length) {
+    const labels: Record<AudienceHistoryCategory, [string, string]> = {
+      comments: [
+        "No comments recorded",
+        "Comments posted from the mobile experience will appear here.",
+      ],
+      likes: [
+        "No likes recorded",
+        "Articles this user likes will appear here.",
+      ],
+      subscriptions: [
+        "No assigned subscriptions",
+        "The user currently relies on the default free plan.",
+      ],
+      transactions: [
+        "No transactions recorded",
+        "Subscription charges and refunds will appear here when payments are enabled.",
+      ],
+    };
+    return (
+      <div className="history-empty">
+        <h4>{labels[category][0]}</h4>
+        <p>{labels[category][1]}</p>
+      </div>
+    );
+  }
+
+  if (category === "comments") {
+    const items = (history as CommentActivityCollection).items;
+    return (
+      <ul className="history-list">
+        {items.map((item) => (
+          <li key={item.id}>
+            <div>
+              <Link href={`/articles/${item.article.slug}`}>
+                {item.article.title}
+              </Link>
+              <p>{item.body}</p>
+            </div>
+            <HistoryMeta status={item.status} date={item.createdAt} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  if (category === "likes") {
+    const items = (history as LikeActivityCollection).items;
+    return (
+      <ul className="history-list">
+        {items.map((item) => (
+          <li key={item.id}>
+            <div>
+              <Link href={`/articles/${item.article.slug}`}>
+                {item.article.title}
+              </Link>
+              <p>Article liked</p>
+            </div>
+            <HistoryMeta date={item.createdAt} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  if (category === "subscriptions") {
+    const items = (history as SubscriptionActivityCollection).items;
+    return (
+      <ul className="history-list">
+        {items.map((item) => (
+          <li key={item.id}>
+            <div>
+              <strong>{item.plan.name}</strong>
+              <p>Assigned by {item.assignedBy.displayName ?? "Mikozi admin"}</p>
+            </div>
+            <HistoryMeta status={item.status} date={item.assignedAt} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  const items = (history as TransactionActivityCollection).items;
+  return (
+    <ul className="history-list">
+      {items.map((item) => (
+        <li key={item.id}>
+          <div>
+            <strong>
+              {item.type === "refund" ? "Refund" : "Subscription charge"} ·{" "}
+              {item.plan.name}
+            </strong>
+            <p>{formatMoney(item.amountMinor, item.currency)}</p>
+          </div>
+          <HistoryMeta status={item.status} date={item.occurredAt} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function HistoryMeta({ status, date }: { status?: string; date: string }) {
+  return (
+    <div className="history-meta">
+      {status ? <span>{status}</span> : null}
+      <time dateTime={date}>{formatDateTime(date)}</time>
+    </div>
   );
 }
 
@@ -303,4 +619,11 @@ function formatReset(value: string): string {
     minute: "2-digit",
     timeZoneName: "short",
   }).format(new Date(value));
+}
+
+function formatMoney(amountMinor: number, currency: string): string {
+  return new Intl.NumberFormat("en-MW", {
+    style: "currency",
+    currency,
+  }).format(amountMinor / 100);
 }

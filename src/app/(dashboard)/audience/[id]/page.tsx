@@ -11,6 +11,7 @@ export default async function AudienceUserPage({
     <AudienceDetail
       id={id}
       canManage={session.profile?.adminAccess?.role === "super_admin"}
+      currentReaderId={session.profile?.id ?? ""}
     />
   );
 }
