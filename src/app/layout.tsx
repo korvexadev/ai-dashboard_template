@@ -9,10 +9,6 @@ export const metadata: Metadata = {
     template: "%s · Mikozi Newsroom",
   },
   description: "The editorial and operations workspace for Mikozi.",
-  icons: {
-    icon: "/images/logo.png",
-    apple: "/images/logo.png",
-  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

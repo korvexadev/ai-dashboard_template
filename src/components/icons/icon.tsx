@@ -2,12 +2,19 @@ import type { SVGProps } from "react";
 
 export type IconName =
   | "articles"
+  | "activity"
+  | "advert"
+  | "arrowDown"
   | "bell"
+  | "arrowUp"
+  | "back"
   | "chevron"
   | "checkCircle"
   | "clock"
   | "dashboard"
+  | "drag"
   | "logout"
+  | "image"
   | "media"
   | "panelClose"
   | "panelOpen"
@@ -16,6 +23,9 @@ export type IconName =
   | "more"
   | "search"
   | "settings"
+  | "text"
+  | "trash"
+  | "video"
   | "users";
 
 const paths: Record<IconName, React.ReactNode> = {
@@ -33,7 +43,39 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M14 3v5h5M8 12h7M8 16h7" />
     </>
   ),
+  activity: (
+    <>
+      <path d="M4 4v16h16" />
+      <path d="m7 15 3-3 3 2 5-6" />
+    </>
+  ),
+  advert: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="3" />
+      <path d="M7 15V9h3a2 2 0 0 1 0 4H7m8 2V9h2a3 3 0 0 1 0 6h-2Z" />
+    </>
+  ),
+  arrowUp: <path d="m6 15 6-6 6 6" />,
+  arrowDown: <path d="m6 9 6 6 6-6" />,
+  drag: (
+    <>
+      <circle cx="9" cy="6" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="6" r="1" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="18" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="18" r="1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  back: <path d="m15 18-6-6 6-6" />,
   media: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="3" />
+      <circle cx="9" cy="10" r="2" />
+      <path d="m4 17 4-4 3 3 3-3 6 5" />
+    </>
+  ),
+  image: (
     <>
       <rect x="3" y="4" width="18" height="16" rx="3" />
       <circle cx="9" cy="10" r="2" />
@@ -100,6 +142,22 @@ const paths: Record<IconName, React.ReactNode> = {
       <circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" />
       <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
       <circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  text: (
+    <>
+      <path d="M5 6V4h14v2M12 4v16M8 20h8" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7M10 11v6M14 11v6" />
+    </>
+  ),
+  video: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="3" />
+      <path d="m10 9 5 3-5 3V9Z" />
     </>
   ),
 };

@@ -31,7 +31,10 @@ export async function callBackend<T>(
   });
 
   return {
-    body: (await response.json()) as T,
+    body:
+      response.status === 204
+        ? (undefined as T)
+        : ((await response.json()) as T),
     status: response.status,
   };
 }

@@ -2,19 +2,29 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { BrandMark } from "@/components/brand/brand-mark";
 import { Icon, type IconName } from "@/components/icons/icon";
 import type { Profile } from "@/lib/api/contracts";
 
-const navigation: Array<{ label: string; icon: IconName; available: boolean }> =
-  [
-    { label: "Overview", icon: "dashboard", available: true },
-    { label: "Articles", icon: "articles", available: false },
-    { label: "Media library", icon: "media", available: false },
-    { label: "Audience", icon: "users", available: false },
-  ];
+const navigation: Array<{
+  label: string;
+  icon: IconName;
+  href: string;
+  available: boolean;
+}> = [
+  { label: "Overview", icon: "dashboard", href: "/", available: true },
+  { label: "Articles", icon: "articles", href: "/articles", available: true },
+  { label: "Media library", icon: "media", href: "#", available: false },
+  { label: "Audience", icon: "users", href: "#", available: false },
+  {
+    label: "Activity log",
+    icon: "activity",
+    href: "/audit-logs",
+    available: true,
+  },
+];
 
 interface DashboardShellProps {
   children: ReactNode;
@@ -23,6 +33,7 @@ interface DashboardShellProps {
 
 export function DashboardShell({ children, profile }: DashboardShellProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [loggingOut, setLoggingOut] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const displayName = profile.displayName?.trim()
@@ -104,8 +115,14 @@ export function DashboardShell({ children, profile }: DashboardShellProps) {
             {navigation.map((item) => (
               <li key={item.label}>
                 <Link
-                  className={item.available ? "active" : "coming-soon"}
-                  href={item.available ? "/" : "#"}
+                  className={
+                    item.available
+                      ? isActive(pathname, item.href)
+                        ? "active"
+                        : undefined
+                      : "coming-soon"
+                  }
+                  href={item.href}
                   aria-disabled={!item.available}
                   tabIndex={item.available ? undefined : -1}
                   onClick={
@@ -127,10 +144,6 @@ export function DashboardShell({ children, profile }: DashboardShellProps) {
         </nav>
 
         <div className="sidebar-bottom">
-          <a className="settings-link" aria-disabled="true">
-            <Icon name="settings" />
-            <span>Settings</span>
-          </a>
           <div className="profile-card">
             <span className="profile-avatar">{initials}</span>
             <span className="profile-copy">
@@ -157,15 +170,9 @@ export function DashboardShell({ children, profile }: DashboardShellProps) {
             <h1>Good day, {firstName(displayName)}.</h1>
           </div>
           <div className="header-actions">
-            <button type="button" aria-label="Search" disabled>
-              <Icon name="search" />
-            </button>
-            <button type="button" aria-label="Notifications" disabled>
-              <Icon name="bell" />
-            </button>
-            <button className="create-button" type="button" disabled>
+            <Link className="create-button" href="/articles/new">
               <Icon name="plus" /> <span>Create article</span>
-            </button>
+            </Link>
           </div>
         </header>
         {children}
@@ -184,4 +191,8 @@ function formatRole(role?: string): string {
     .split("_")
     .map((word) => `${word[0]?.toUpperCase()}${word.slice(1)}`)
     .join(" ");
+}
+
+function isActive(pathname: string, href: string): boolean {
+  return href === "/" ? pathname === href : pathname.startsWith(href);
 }

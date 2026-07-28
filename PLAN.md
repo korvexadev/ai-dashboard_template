@@ -10,8 +10,26 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
       gates.
 - [x] `done` Generate the REST client from the backend OpenAPI artifact and
       enforce drift checks.
+- [x] `done` Normalize the operator UI with readable typography,
+      conventional workspace hierarchy, restrained status treatments, and
+      consistent responsive tables, forms, navigation, and feedback states.
 - [ ] `in_progress` Establish server/client authentication boundaries, common error
       mapping, URL-owned table state, audit context, and observability.
+
+### Operator UI cleanup acceptance criteria
+
+- Preserve the existing routes, navigation labels, authentication boundary,
+  generated contracts, form fields, and article behavior.
+- Use the existing Mikozi mark, system font stack, neutral surfaces, and one
+  restrained red brand accent without decorative gradients or unnecessary
+  motion.
+- Dashboard, article, composer, reader, and activity views use readable
+  production UI type sizes and consistent controls, borders, radii, and focus
+  states.
+- The overview prioritizes real operator destinations and implementation
+  availability without invented editorial metrics.
+- Desktop, tablet, and mobile layouts remain keyboard accessible and avoid
+  clipped actions, unreadable tables, or horizontal page overflow.
 
 ## 1. Phone identity and admin access
 
@@ -49,12 +67,54 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 
 ## 3. Newsroom publishing
 
-- [ ] `pending` Build editorial queues, drafts, structured content, autosave,
+- [x] `done` Complete the Articles create/read vertical slice with generated
+      REST types, refresh-aware BFF routes, ordered section composer, list,
+      reader, super-admin activity log, and production verification.
+- [ ] `in_progress` Build editorial queues, drafts, structured content, autosave,
       preview, revision comparison, review, schedule, publish, correction, archive,
       restore, and audit.
 - [ ] `pending` Enforce action permissions and resilient concurrent-edit and
       failed-publication states.
 - [ ] `pending` Pass the shared publish-and-read journey with backend and mobile.
+
+### Article creation/read slice acceptance criteria
+
+- Articles navigation, list, creation, and detail reading use the generated
+  REST contract and the existing HttpOnly session boundary.
+- The creation composer supports any number of ordered rich-text, image,
+  YouTube, and advert sections with accessible type-specific validation.
+- Successful creation opens the authoritative backend read model; failures
+  preserve the draft form and show a stable actionable error.
+- Empty, loading, unauthorized, not-found, and service-unavailable states use
+  the dashboard visual system. No authorization rule is reproduced client-side.
+
+### Article authoring upgrade acceptance criteria
+
+- Article list, create redirect, browser route, breadcrumb, and BFF reads use
+  the backend-provided article slug rather than the database ID.
+- Sections can be reordered by pointer, touch, or keyboard drag-and-drop while
+  retaining the one-step up/down controls as an accessible fallback.
+- Rich-text sections use a maintained JavaScript editor with formatting,
+  history, lists, links, and Markdown serialization; section headings are not
+  offered or rendered.
+- The composer keeps editing controls on the left and shows a large, sticky,
+  live phone preview on the right across supported responsive layouts.
+- The article reader keeps its linked article path visible while scrolling and
+  displays the current slug.
+
+### Article management workflow acceptance criteria
+
+- The article table uses URL-owned search, status, sorting, direction, and
+  pagination parameters backed by the canonical REST list endpoint.
+- Editors can update an article through the existing structured composer;
+  successful saves open the authoritative new revision and stale saves remain
+  recoverable.
+- Article detail actions consume backend-provided available transitions, show
+  server-confirmed results, and require explicit confirmation before deletion.
+- Successful deletion returns to the article list. Failed status, update, and
+  delete commands retain the current view and show the backend-safe error.
+- Article detail includes a clearly unavailable engagement scaffold for future
+  comments and likes without displaying invented counts or client-owned rules.
 
 ## 4. Reader discovery and audience preferences
 

@@ -100,6 +100,86 @@ export interface paths {
         patch: operations["ProfileController_update"];
         trace?: never;
     };
+    "/api/v1/articles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ArticleController_list"];
+        put?: never;
+        post: operations["ArticleController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/articles/slug/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ArticleController_getBySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/articles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ArticleController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["ArticleController_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["ArticleController_update"];
+        trace?: never;
+    };
+    "/api/v1/articles/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["ArticleController_updateStatus"];
+        trace?: never;
+    };
+    "/api/v1/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AuditController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/health": {
         parameters: {
             query?: never;
@@ -200,6 +280,139 @@ export interface components {
             avatarUrl?: string | null;
             /** @enum {string} */
             preferredLanguage?: "en" | "ny";
+        };
+        ArticleAuthorResponseDto: {
+            /** Format: uuid */
+            id: string;
+            displayName: string | null;
+        };
+        ArticleSectionResponseDto: {
+            /** Format: uuid */
+            id: string;
+            position: number;
+            /** @enum {string} */
+            type: "rich_text" | "image" | "youtube" | "advert";
+            /**
+             * @deprecated
+             * @description Compatibility field for articles created by older authoring clients.
+             */
+            heading: string | null;
+            body: string | null;
+            mediaUrl: string | null;
+            caption: string | null;
+            altText: string | null;
+            youtubeVideoId: string | null;
+            advertPlacementCode: string | null;
+        };
+        ArticleResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @example a-clear-specific-headline-9f5d4c3b */
+            slug: string;
+            /** @enum {string} */
+            status: "draft" | "published" | "archived";
+            availableTransitions: ("draft" | "published" | "archived")[];
+            canDelete: boolean;
+            version: number;
+            title: string;
+            summary: string;
+            heroImageUrl: string | null;
+            /** Format: date-time */
+            publishedAt: string | null;
+            author: components["schemas"]["ArticleAuthorResponseDto"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            sections: components["schemas"]["ArticleSectionResponseDto"][];
+        };
+        CreateArticleSectionDto: {
+            /** @enum {string} */
+            type: "rich_text" | "image" | "youtube" | "advert";
+            /**
+             * @deprecated
+             * @description Compatibility field for older clients. New authoring surfaces omit section headings.
+             */
+            heading?: string;
+            /** @description Markdown for rich-text sections. */
+            body?: string;
+            /** Format: uri */
+            mediaUrl?: string;
+            caption?: string;
+            altText?: string;
+            /** @example dQw4w9WgXcQ */
+            youtubeVideoId?: string;
+            /** @example article.inline.1 */
+            advertPlacementCode?: string;
+        };
+        CreateArticleDto: {
+            title: string;
+            summary: string;
+            /** Format: uri */
+            heroImageUrl?: string;
+            sections: components["schemas"]["CreateArticleSectionDto"][];
+        };
+        ArticleSummaryResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @example a-clear-specific-headline-9f5d4c3b */
+            slug: string;
+            /** @enum {string} */
+            status: "draft" | "published" | "archived";
+            availableTransitions: ("draft" | "published" | "archived")[];
+            canDelete: boolean;
+            version: number;
+            title: string;
+            summary: string;
+            heroImageUrl: string | null;
+            /** Format: date-time */
+            publishedAt: string | null;
+            author: components["schemas"]["ArticleAuthorResponseDto"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            sectionCount: number;
+        };
+        ArticleCollectionResponseDto: {
+            items: components["schemas"]["ArticleSummaryResponseDto"][];
+            total: number;
+        };
+        UpdateArticleDto: {
+            title: string;
+            summary: string;
+            /** Format: uri */
+            heroImageUrl?: string;
+            sections: components["schemas"]["CreateArticleSectionDto"][];
+            expectedVersion: number;
+        };
+        UpdateArticleStatusDto: {
+            /** @enum {string} */
+            status: "draft" | "published" | "archived";
+            expectedVersion: number;
+        };
+        AuditActorResponseDto: {
+            /** Format: uuid */
+            id: string;
+            displayName: string | null;
+            /** @example 265991234567 */
+            phoneNumber: string;
+        };
+        AuditLogResponseDto: {
+            /** Format: uuid */
+            id: string;
+            actor: components["schemas"]["AuditActorResponseDto"];
+            action: string;
+            resourceType: string;
+            /** Format: uuid */
+            resourceId: string;
+            metadata: Record<string, never>;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AuditLogCollectionResponseDto: {
+            items: components["schemas"]["AuditLogResponseDto"][];
+            total: number;
         };
     };
     responses: never;
@@ -374,6 +587,211 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["ProfileResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ArticleController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                search?: string;
+                status?: "draft" | "published" | "archived";
+                sortBy?: "title" | "status" | "createdAt" | "updatedAt";
+                sortDirection?: "asc" | "desc";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ArticleCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ArticleController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateArticleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ArticleResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ArticleController_getBySlug: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ArticleResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ArticleController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ArticleResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ArticleController_delete: {
+        parameters: {
+            query: {
+                expectedVersion: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ArticleController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateArticleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ArticleResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ArticleController_updateStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateArticleStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ArticleResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    AuditController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AuditLogCollectionResponseDto"];
                         meta: components["schemas"]["ApiMetaDto"];
                     };
                 };
