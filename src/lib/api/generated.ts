@@ -485,6 +485,70 @@ export interface paths {
         patch: operations["NotificationDraftController_update"];
         trace?: never;
     };
+    "/api/v1/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CategoryController_list"];
+        put?: never;
+        post: operations["CategoryController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["CategoryController_update"];
+        trace?: never;
+    };
+    "/api/v1/homepage-layout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HomepageLayoutController_get"];
+        put: operations["HomepageLayoutController_replace"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reader/homepage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReaderHomepageController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -593,6 +657,12 @@ export interface components {
             phoneNumber: string;
             displayName?: string;
         };
+        ArticleCategoryResponseDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
         ArticleAuthorResponseDto: {
             /** Format: uuid */
             id: string;
@@ -628,6 +698,7 @@ export interface components {
             version: number;
             title: string;
             summary: string;
+            category: components["schemas"]["ArticleCategoryResponseDto"];
             heroImageUrl: string | null;
             /** Format: date-time */
             publishedAt: string | null;
@@ -660,6 +731,11 @@ export interface components {
         CreateArticleDto: {
             title: string;
             summary: string;
+            /**
+             * Format: uuid
+             * @description Active article category. Omit only for compatibility; the backend assigns General.
+             */
+            categoryId?: string;
             /** Format: uri */
             heroImageUrl?: string;
             sections: components["schemas"]["CreateArticleSectionDto"][];
@@ -676,6 +752,7 @@ export interface components {
             version: number;
             title: string;
             summary: string;
+            category: components["schemas"]["ArticleCategoryResponseDto"];
             heroImageUrl: string | null;
             /** Format: date-time */
             publishedAt: string | null;
@@ -693,6 +770,11 @@ export interface components {
         UpdateArticleDto: {
             title: string;
             summary: string;
+            /**
+             * Format: uuid
+             * @description Active article category. Omit only for compatibility; the backend assigns General.
+             */
+            categoryId?: string;
             /** Format: uri */
             heroImageUrl?: string;
             sections: components["schemas"]["CreateArticleSectionDto"][];
@@ -757,6 +839,9 @@ export interface components {
             archivedMediaAssets: number;
             notificationDrafts: number;
             cancelledNotificationDrafts: number;
+            activeCategories: number;
+            homepageSections: number;
+            homepageLayoutVersion: number;
         };
         OperationsAnalyticsDto: {
             totalArticleRevisions: number;
@@ -1148,6 +1233,147 @@ export interface components {
             scheduledAt?: string | null;
             /** @enum {string} */
             status?: "draft" | "cancelled";
+        };
+        CategoryResponseDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            description: string | null;
+            /** @enum {string} */
+            status: "active" | "archived";
+            sortOrder: number;
+            articleCount: number;
+            /** Format: date-time */
+            archivedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CategoryCollectionResponseDto: {
+            items: components["schemas"]["CategoryResponseDto"][];
+        };
+        CreateCategoryDto: {
+            name: string;
+            description?: string;
+            /** @default 0 */
+            sortOrder: number;
+        };
+        UpdateCategoryDto: {
+            name?: string;
+            description?: string;
+            /** @default 0 */
+            sortOrder: number;
+            /** @enum {string} */
+            status?: "active" | "archived";
+        };
+        AdminHomepageCategoryResponseDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            /** @enum {string} */
+            placement: "top" | "more" | "hidden";
+        };
+        AdminHomepageSectionResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            categoryId: string;
+            title: string | null;
+            /** @enum {string} */
+            type: "banner" | "list" | "advert" | "horizontal_list" | "categories";
+            /** @enum {string} */
+            populationMode: "automatic" | "curated" | "hybrid";
+            itemLimit: number;
+            advertPlacementCode: string | null;
+            articleIds: string[];
+            categoryIds: string[];
+        };
+        AdminHomepageLayoutResponseDto: {
+            version: number;
+            autoFillMore: boolean;
+            categories: components["schemas"]["AdminHomepageCategoryResponseDto"][];
+            sections: components["schemas"]["AdminHomepageSectionResponseDto"][];
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        SaveHomepageCategoryDto: {
+            /** Format: uuid */
+            categoryId: string;
+            /** @enum {string} */
+            placement: "top" | "more" | "hidden";
+        };
+        SaveHomepageSectionDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            categoryId: string;
+            title?: string | null;
+            /** @enum {string} */
+            type: "banner" | "list" | "advert" | "horizontal_list" | "categories";
+            /** @enum {string} */
+            populationMode: "automatic" | "curated" | "hybrid";
+            itemLimit: number;
+            /** @example home.category.inline */
+            advertPlacementCode?: string | null;
+            articleIds: string[];
+            categoryIds: string[];
+        };
+        SaveHomepageLayoutDto: {
+            expectedVersion: number;
+            autoFillMore: boolean;
+            categories: components["schemas"]["SaveHomepageCategoryDto"][];
+            sections: components["schemas"]["SaveHomepageSectionDto"][];
+        };
+        HomepageCategoryResponseDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
+        HomepageArticleResponseDto: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            title: string;
+            summary: string;
+            /** Format: uri */
+            heroImageUrl: string | null;
+            /** Format: date-time */
+            publishedAt: string | null;
+            category: components["schemas"]["HomepageCategoryResponseDto"];
+        };
+        HomepageSectionResponseDto: {
+            /** Format: uuid */
+            id: string;
+            title: string | null;
+            /** @enum {string} */
+            type: "banner" | "list" | "advert" | "horizontal_list" | "categories";
+            /** @enum {string} */
+            populationMode: "automatic" | "curated" | "hybrid";
+            itemLimit: number;
+            advertPlacementCode: string | null;
+            articles: components["schemas"]["HomepageArticleResponseDto"][];
+            categories: components["schemas"]["HomepageCategoryResponseDto"][];
+        };
+        HomepageTabResponseDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            /** @enum {string} */
+            placement: "top" | "more";
+            sections: components["schemas"]["HomepageSectionResponseDto"][];
+        };
+        HomepageSnapshotResponseDto: {
+            version: number;
+            autoFillMore: boolean;
+            topNavigation: components["schemas"]["HomepageTabResponseDto"][];
+            moreNavigation: components["schemas"]["HomepageTabResponseDto"][];
+            /** Format: date-time */
+            updatedAt: string;
         };
     };
     responses: never;
@@ -2189,6 +2415,155 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["NotificationDraftResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    CategoryController_list: {
+        parameters: {
+            query?: {
+                search?: string;
+                status?: "active" | "archived";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CategoryCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    CategoryController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCategoryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CategoryResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    CategoryController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCategoryDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CategoryResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    HomepageLayoutController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminHomepageLayoutResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    HomepageLayoutController_replace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveHomepageLayoutDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminHomepageLayoutResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReaderHomepageController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["HomepageSnapshotResponseDto"];
                         meta: components["schemas"]["ApiMetaDto"];
                     };
                 };

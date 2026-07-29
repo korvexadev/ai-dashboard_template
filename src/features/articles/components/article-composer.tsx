@@ -17,7 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Icon, type IconName } from "@/components/icons/icon";
 import { createArticle, updateArticle } from "@/features/articles/api/articles";
@@ -26,6 +26,8 @@ import {
   type ArticleDraftInput,
 } from "@/features/articles/schemas/article.schema";
 import type { Article } from "@/lib/api/contracts";
+import type { ArticleCategory } from "@/lib/api/contracts";
+import { getCategories } from "@/features/homepage/api/homepage";
 
 import { ArticlePhonePreview } from "./article-phone-preview";
 import { SectionEditor, type EditableSection } from "./section-editor";
@@ -52,6 +54,8 @@ export function ArticleComposer({ article }: { article?: Article }) {
   );
   const [title, setTitle] = useState(article?.title ?? "");
   const [summary, setSummary] = useState(article?.summary ?? "");
+  const [categoryId, setCategoryId] = useState(article?.category.id ?? "");
+  const [categories, setCategories] = useState<ArticleCategory[]>([]);
   const [heroImageUrl, setHeroImageUrl] = useState(article?.heroImageUrl ?? "");
   const [sections, setSections] = useState<EditableSection[]>(() =>
     article
@@ -60,6 +64,21 @@ export function ArticleComposer({ article }: { article?: Article }) {
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    void getCategories()
+      .then((items) => {
+        const active = items.filter((item) => item.status === "active");
+        setCategories(active);
+        setCategoryId((current) => current || active[0]?.id || "");
+      })
+      .catch(() =>
+        setErrors((current) => ({
+          ...current,
+          categoryId: "Categories could not be loaded.",
+        })),
+      );
+  }, []);
 
   function addSection(type: EditableSection["type"]) {
     setSections((current) => [...current, newSection(type)]);
@@ -92,6 +111,7 @@ export function ArticleComposer({ article }: { article?: Article }) {
     const parsed = articleDraftSchema.safeParse({
       title,
       summary,
+      categoryId,
       heroImageUrl,
       sections: sections.map(toDraftSection),
     });
@@ -174,6 +194,23 @@ export function ArticleComposer({ article }: { article?: Article }) {
               <small>{summary.length}/500</small>
               {errors.summary ? (
                 <small className="field-error">{errors.summary}</small>
+              ) : null}
+            </label>
+            <label>
+              <span>Category</span>
+              <select
+                value={categoryId}
+                onChange={(event) => setCategoryId(event.target.value)}
+              >
+                <option value="">Select a category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              {errors.categoryId ? (
+                <small className="field-error">{errors.categoryId}</small>
               ) : null}
             </label>
             <label>
@@ -321,6 +358,7 @@ function toRequest(draft: ArticleDraftInput) {
   return {
     title: draft.title,
     summary: draft.summary,
+    categoryId: draft.categoryId,
     ...(draft.heroImageUrl ? { heroImageUrl: draft.heroImageUrl } : {}),
     sections: draft.sections,
   };

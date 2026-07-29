@@ -33,6 +33,7 @@ export const articleSectionSchema = z.discriminatedUnion("type", [
 export const articleDraftSchema = z.object({
   title: z.string().trim().min(1, "Add a headline.").max(180),
   summary: z.string().trim().min(1, "Add a summary.").max(500),
+  categoryId: z.uuid("Select an article category."),
   heroImageUrl: z.union([z.literal(""), z.url("Enter a valid image URL.")]),
   sections: z
     .array(articleSectionSchema)

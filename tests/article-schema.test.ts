@@ -6,6 +6,7 @@ describe("articleDraftSchema", () => {
   const base = {
     title: "The lake that feeds a nation",
     summary: "A dispatch from the southern lakeshore.",
+    categoryId: "22222222-2222-4222-8222-222222222222",
     heroImageUrl: "",
   };
 

@@ -225,6 +225,19 @@ export function OverviewDashboard() {
               value={analytics?.contentOperations.notificationDrafts}
               detail="saved, not sent"
             />
+            <PulseRow
+              label="Active categories"
+              value={analytics?.contentOperations.activeCategories}
+              detail="available to editors"
+            />
+            <PulseRow
+              label="Homepage sections"
+              value={analytics?.contentOperations.homepageSections}
+              detail={`layout version ${
+                analytics?.contentOperations.homepageLayoutVersion ??
+                "unavailable"
+              }`}
+            />
           </div>
         </article>
       </section>

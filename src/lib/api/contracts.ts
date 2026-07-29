@@ -76,6 +76,18 @@ export type CreateNotificationDraft =
   components["schemas"]["CreateNotificationDraftDto"];
 export type UpdateNotificationDraft =
   components["schemas"]["UpdateNotificationDraftDto"];
+export type ArticleCategory = components["schemas"]["CategoryResponseDto"];
+export type ArticleCategoryCollection =
+  components["schemas"]["CategoryCollectionResponseDto"];
+export type CreateArticleCategory = components["schemas"]["CreateCategoryDto"];
+export type UpdateArticleCategory = components["schemas"]["UpdateCategoryDto"];
+export type AdminHomepageLayout =
+  components["schemas"]["AdminHomepageLayoutResponseDto"];
+export type SaveHomepageLayout = components["schemas"]["SaveHomepageLayoutDto"];
+export type SaveHomepageSection =
+  components["schemas"]["SaveHomepageSectionDto"];
+export type HomepageSnapshot =
+  components["schemas"]["HomepageSnapshotResponseDto"];
 
 export interface ApiEnvelope<T> {
   data: T;

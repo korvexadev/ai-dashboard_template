@@ -70,8 +70,8 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 
 ## 2. Taxonomy and media
 
-- [ ] `pending` Build section/topic/tag management with stable slugs and
-      compatible edits.
+- [ ] `in_progress` Build category management, article assignment, and the
+      versioned homepage-layout editor; topics and tags remain pending.
 - [x] `done` Build the searchable media registry with URL registration, caption,
       alt text, dimensions, rights metadata, and archive/restore.
 - [ ] `in_progress` Connect binary upload, processing state, renditions, usage,
@@ -136,8 +136,9 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
       assignment.
 - [x] `done` Build super-admin account moderation and persisted reader
       comment, like, subscription, and transaction histories.
-- [ ] `pending` Build homepage/feed curation, editorial priority controls, safe
-      audience-policy preview, and explainable placement inspection.
+- [ ] `in_progress` Build homepage/feed curation with top/More category
+      placement, ordered section layouts, automatic/hybrid population,
+      duplicate prevention, and a resolved mobile preview.
 - [ ] `pending` Build consent-aware segment administration without exposing raw
       protected reader attributes.
 - [ ] `pending` Pass the shared discovery/personalization journey.
