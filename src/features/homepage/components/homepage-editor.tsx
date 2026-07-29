@@ -1,15 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons/icon";
+import { getCategories } from "@/features/categories/api/categories";
+import { CategoryCreateDialog } from "@/features/categories/components/category-create-dialog";
 import {
-  createCategory,
-  getCategories,
   getHomepageLayout,
   getPublishedArticles,
   saveHomepageLayout,
-  updateCategory,
 } from "@/features/homepage/api/homepage";
 import type {
   ArticleCategory,
@@ -47,7 +47,7 @@ export function HomepageEditor() {
   const [sections, setSections] = useState<DraftSection[]>([]);
   const [version, setVersion] = useState(1);
   const [autoFillMore, setAutoFillMore] = useState(true);
-  const [newCategory, setNewCategory] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,63 +55,47 @@ export function HomepageEditor() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    async function load() {
+      try {
+        const [categoryItems, layout, articleCollection] = await Promise.all([
+          getCategories(),
+          getHomepageLayout(),
+          getPublishedArticles(),
+        ]);
+        setCategories(categoryItems);
+        setArticles(articleCollection.items);
+        setVersion(layout.version);
+        setAutoFillMore(layout.autoFillMore);
+        setPlacements(
+          Object.fromEntries(
+            categoryItems.map((category) => [
+              category.id,
+              layout.categories.find((item) => item.id === category.id)
+                ?.placement ?? "auto",
+            ]),
+          ),
+        );
+        setSections(
+          layout.sections.map((section) => ({
+            ...section,
+            clientId: section.id,
+          })),
+        );
+        setActiveTab(
+          (current) =>
+            current ||
+            categoryItems.find((category) => category.status === "active")
+              ?.id ||
+            "",
+        );
+      } catch (loadError) {
+        setError(message(loadError));
+      } finally {
+        setLoading(false);
+      }
+    }
     void load();
   }, []);
-
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
-      const [categoryItems, layout, articleCollection] = await Promise.all([
-        getCategories(),
-        getHomepageLayout(),
-        getPublishedArticles(),
-      ]);
-      setCategories(categoryItems);
-      setArticles(articleCollection.items);
-      setVersion(layout.version);
-      setAutoFillMore(layout.autoFillMore);
-      setPlacements(
-        Object.fromEntries(
-          categoryItems.map((category) => [
-            category.id,
-            layout.categories.find((item) => item.id === category.id)
-              ?.placement ?? "auto",
-          ]),
-        ),
-      );
-      setSections(
-        layout.sections.map((section) => ({
-          ...section,
-          clientId: section.id,
-        })),
-      );
-      setActiveTab((current) => current || categoryItems[0]?.id || "");
-    } catch (loadError) {
-      setError(message(loadError));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function addCategory(event: React.FormEvent) {
-    event.preventDefault();
-    if (!newCategory.trim()) return;
-    setError("");
-    try {
-      const category = await createCategory({
-        name: newCategory.trim(),
-        sortOrder: categories.length,
-      });
-      setCategories((current) => [...current, category]);
-      setPlacements((current) => ({ ...current, [category.id]: "auto" }));
-      setNewCategory("");
-      setActiveTab(category.id);
-      setNotice("Category created. Save the layout to choose its placement.");
-    } catch (createError) {
-      setError(message(createError));
-    }
-  }
 
   function addSection(categoryId: string) {
     setPlacements((current) => ({
@@ -164,9 +148,14 @@ export function HomepageEditor() {
   }
 
   async function save() {
-    setSaving(true);
     setError("");
     setNotice("");
+    const draftError = validateHomepageDraft(categories, sections);
+    if (draftError) {
+      setError(draftError);
+      return;
+    }
+    setSaving(true);
     try {
       const saved = await saveHomepageLayout({
         expectedVersion: version,
@@ -175,15 +164,28 @@ export function HomepageEditor() {
           .filter(
             (category) =>
               category.status === "active" &&
-              placements[category.id] !== "auto",
+              (placements[category.id] !== "auto" ||
+                sections.some((section) => section.categoryId === category.id)),
           )
           .map((category) => ({
             categoryId: category.id,
-            placement: placements[category.id] as Exclude<Placement, "auto">,
+            placement:
+              placements[category.id] === "auto"
+                ? "more"
+                : (placements[category.id] as Exclude<Placement, "auto">),
           })),
         sections: sections.map(toSaveSection),
       });
       setVersion(saved.version);
+      setPlacements(
+        Object.fromEntries(
+          categories.map((category) => [
+            category.id,
+            saved.categories.find((item) => item.id === category.id)
+              ?.placement ?? "auto",
+          ]),
+        ),
+      );
       setSections(
         saved.sections.map((section) => ({
           ...section,
@@ -253,35 +255,36 @@ export function HomepageEditor() {
             <div className="homepage-section-title">
               <div>
                 <h3>Category navigation</h3>
-                <p>Choose the primary rail, More menu, or hide a category.</p>
+                <p>
+                  Choose the primary rail, More menu, or hide a category from
+                  the mobile homepage.
+                </p>
               </div>
-              <label className="compact-check">
-                <input
-                  type="checkbox"
-                  checked={autoFillMore}
-                  onChange={(event) => setAutoFillMore(event.target.checked)}
-                />
-                Prefill unassigned categories under More
-              </label>
+              <div className="homepage-category-actions">
+                <Link className="text-button" href="/categories">
+                  Manage categories
+                </Link>
+                <button
+                  className="outline-button"
+                  type="button"
+                  onClick={() => setCreatingCategory(true)}
+                >
+                  <Icon name="plus" /> New category
+                </button>
+              </div>
             </div>
 
-            <form className="category-create-row" onSubmit={addCategory}>
-              <label>
-                <span>New category</span>
-                <input
-                  value={newCategory}
-                  onChange={(event) => setNewCategory(event.target.value)}
-                  maxLength={80}
-                  placeholder="Category name"
-                />
-              </label>
-              <button className="outline-button" type="submit">
-                <Icon name="plus" /> Add category
-              </button>
-            </form>
+            <label className="compact-check homepage-autofill-check">
+              <input
+                type="checkbox"
+                checked={autoFillMore}
+                onChange={(event) => setAutoFillMore(event.target.checked)}
+              />
+              Prefill unassigned categories under More
+            </label>
 
             <div className="category-placement-list">
-              {categories.map((category) => (
+              {activeCategories.map((category) => (
                 <div className="category-placement-row" key={category.id}>
                   <button
                     className="category-name-button"
@@ -293,54 +296,25 @@ export function HomepageEditor() {
                       /{category.slug}, {category.articleCount} articles
                     </small>
                   </button>
-                  {category.status === "archived" ? (
-                    <button
-                      className="text-button"
-                      type="button"
-                      onClick={() =>
-                        void updateCategory(category.id, {
-                          status: "active",
-                          sortOrder: category.sortOrder,
-                        }).then(load)
+                  <label>
+                    <span className="sr-only">
+                      Placement for {category.name}
+                    </span>
+                    <select
+                      value={placements[category.id] ?? "auto"}
+                      onChange={(event) =>
+                        setPlacements((current) => ({
+                          ...current,
+                          [category.id]: event.target.value as Placement,
+                        }))
                       }
                     >
-                      Restore
-                    </button>
-                  ) : (
-                    <>
-                      <label>
-                        <span className="sr-only">
-                          Placement for {category.name}
-                        </span>
-                        <select
-                          value={placements[category.id] ?? "auto"}
-                          onChange={(event) =>
-                            setPlacements((current) => ({
-                              ...current,
-                              [category.id]: event.target.value as Placement,
-                            }))
-                          }
-                        >
-                          <option value="auto">Auto More</option>
-                          <option value="top">Top navigation</option>
-                          <option value="more">Under More</option>
-                          <option value="hidden">Hidden</option>
-                        </select>
-                      </label>
-                      <button
-                        className="text-button danger-text"
-                        type="button"
-                        onClick={() =>
-                          void updateCategory(category.id, {
-                            status: "archived",
-                            sortOrder: category.sortOrder,
-                          }).then(load)
-                        }
-                      >
-                        Archive
-                      </button>
-                    </>
-                  )}
+                      <option value="auto">Auto More</option>
+                      <option value="top">Top navigation</option>
+                      <option value="more">Under More</option>
+                      <option value="hidden">Hidden</option>
+                    </select>
+                  </label>
                 </div>
               ))}
             </div>
@@ -427,6 +401,19 @@ export function HomepageEditor() {
           autoFillMore={autoFillMore}
         />
       </div>
+      <CategoryCreateDialog
+        open={creatingCategory}
+        sortOrder={categories.length}
+        onClose={() => setCreatingCategory(false)}
+        onCreated={(category) => {
+          setCategories((current) => [...current, category]);
+          setPlacements((current) => ({ ...current, [category.id]: "auto" }));
+          setActiveTab(category.id);
+          setNotice(
+            `${category.name} was created. Choose its placement before publishing.`,
+          );
+        }}
+      />
     </main>
   );
 }
@@ -655,70 +642,74 @@ function HomepagePhonePreview({
         </div>
         <span>Draft</span>
       </div>
-      <div className="homepage-phone">
-        <div className="homepage-phone-status">9:41</div>
-        <header>
-          <strong>Mikozi</strong>
-          <small>{activeName}</small>
-        </header>
-        <nav>
-          {top.map((category) => (
-            <span
-              key={category.id}
-              className={category.id === activeTab ? "active" : undefined}
-            >
-              {category.name}
-            </span>
-          ))}
-          <span>More</span>
-        </nav>
-        <div className="homepage-phone-content">
-          {sections.map((section) => {
-            const chosen = articles.filter((article) =>
-              section.articleIds.includes(article.id),
-            );
-            return (
-              <section key={section.clientId} data-layout={section.type}>
-                {section.title ? <h4>{section.title}</h4> : null}
-                {section.type === "advert" ? (
-                  <div className="phone-advert">
-                    Advert: {section.advertPlacementCode || "placement needed"}
-                  </div>
-                ) : section.type === "categories" ? (
-                  <div className="phone-category-links">
-                    {section.categoryIds.map((id) => (
-                      <span key={id}>
-                        {categories.find((category) => category.id === id)
-                          ?.name ?? "Category"}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="phone-story-list">
-                    {chosen.map((article) => (
-                      <article key={article.id}>
-                        <div />
-                        <strong>{article.title}</strong>
-                      </article>
-                    ))}
-                    {section.populationMode !== "curated" ? (
-                      <article className="automatic-story">
-                        <div />
-                        <strong>
-                          Automatic fill up to {section.itemLimit} stories
-                        </strong>
-                      </article>
-                    ) : null}
-                  </div>
-                )}
-              </section>
-            );
-          })}
-          {!sections.length ? (
-            <div className="phone-empty">
-              Add a section to this category tab.
-            </div>
-          ) : null}
+      <div className="phone-device homepage-phone-device">
+        <div className="phone-speaker" />
+        <div className="phone-screen homepage-phone">
+          <div className="homepage-phone-status">9:41</div>
+          <header>
+            <strong>Mikozi</strong>
+            <small>{activeName}</small>
+          </header>
+          <nav>
+            {top.map((category) => (
+              <span
+                key={category.id}
+                className={category.id === activeTab ? "active" : undefined}
+              >
+                {category.name}
+              </span>
+            ))}
+            <span>More</span>
+          </nav>
+          <div className="homepage-phone-content">
+            {sections.map((section) => {
+              const chosen = articles.filter((article) =>
+                section.articleIds.includes(article.id),
+              );
+              return (
+                <section key={section.clientId} data-layout={section.type}>
+                  {section.title ? <h4>{section.title}</h4> : null}
+                  {section.type === "advert" ? (
+                    <div className="phone-advert">
+                      Advert:{" "}
+                      {section.advertPlacementCode || "placement needed"}
+                    </div>
+                  ) : section.type === "categories" ? (
+                    <div className="phone-category-links">
+                      {section.categoryIds.map((id) => (
+                        <span key={id}>
+                          {categories.find((category) => category.id === id)
+                            ?.name ?? "Category"}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="phone-story-list">
+                      {chosen.map((article) => (
+                        <article key={article.id}>
+                          <div />
+                          <strong>{article.title}</strong>
+                        </article>
+                      ))}
+                      {section.populationMode !== "curated" ? (
+                        <article className="automatic-story">
+                          <div />
+                          <strong>
+                            Automatic fill up to {section.itemLimit} stories
+                          </strong>
+                        </article>
+                      ) : null}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
+            {!sections.length ? (
+              <div className="phone-empty">
+                Add a section to this category tab.
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
       <p className="homepage-preview-note">
@@ -742,6 +733,47 @@ function duplicateArticleCount(sections: DraftSection[]): number {
     tabs.set(section.categoryId, seen);
   }
   return duplicates;
+}
+
+function validateHomepageDraft(
+  categories: ArticleCategory[],
+  sections: DraftSection[],
+): string | null {
+  const activeIds = new Set(
+    categories
+      .filter((category) => category.status === "active")
+      .map((category) => category.id),
+  );
+  for (const section of sections) {
+    if (!activeIds.has(section.categoryId)) {
+      return "Remove sections that belong to an archived category.";
+    }
+    if (
+      !Number.isInteger(section.itemLimit) ||
+      section.itemLimit < 1 ||
+      section.itemLimit > 30
+    ) {
+      return "Every section item limit must be between 1 and 30.";
+    }
+    if (section.type === "advert" && !section.advertPlacementCode?.trim()) {
+      return "Enter an advert placement code before publishing.";
+    }
+    if (section.type === "categories" && !section.categoryIds.length) {
+      return "Select at least one linked category before publishing.";
+    }
+    if (
+      section.populationMode === "curated" &&
+      section.type !== "advert" &&
+      section.type !== "categories" &&
+      !section.articleIds.length
+    ) {
+      return "Select at least one published article for every curated section.";
+    }
+    if (section.articleIds.length > section.itemLimit) {
+      return "Curated article selections cannot exceed the section item limit.";
+    }
+  }
+  return null;
 }
 
 function toSaveSection(section: DraftSection): SaveHomepageSection {

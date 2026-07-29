@@ -18,6 +18,12 @@ const navigation: Array<{
   { label: "Overview", icon: "dashboard", href: "/", available: true },
   { label: "Articles", icon: "articles", href: "/articles", available: true },
   {
+    label: "Categories",
+    icon: "articles",
+    href: "/categories",
+    available: true,
+  },
+  {
     label: "Mobile homepage",
     icon: "dashboard",
     href: "/homepage",

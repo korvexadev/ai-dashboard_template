@@ -1,38 +1,9 @@
 import type {
   AdminHomepageLayout,
-  ArticleCategory,
-  ArticleCategoryCollection,
   ArticleCollection,
-  CreateArticleCategory,
   HomepageSnapshot,
   SaveHomepageLayout,
-  UpdateArticleCategory,
 } from "@/lib/api/contracts";
-
-export async function getCategories(): Promise<ArticleCategory[]> {
-  return (await request<ArticleCategoryCollection>("/api/categories")).items;
-}
-
-export async function createCategory(
-  input: CreateArticleCategory,
-): Promise<ArticleCategory> {
-  return request<ArticleCategory>("/api/categories", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(input),
-  });
-}
-
-export async function updateCategory(
-  id: string,
-  input: UpdateArticleCategory,
-): Promise<ArticleCategory> {
-  return request<ArticleCategory>(`/api/categories/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(input),
-  });
-}
 
 export function getHomepageLayout(): Promise<AdminHomepageLayout> {
   return request<AdminHomepageLayout>("/api/homepage-layout");

@@ -70,13 +70,24 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 
 ## 2. Taxonomy and media
 
-- [ ] `in_progress` Build category management, article assignment, and the
-      versioned homepage-layout editor; topics and tags remain pending.
+- [x] `done` Build category management, article assignment, and the versioned
+      homepage-layout editor; topics and tags remain pending.
 - [x] `done` Build the searchable media registry with URL registration, caption,
       alt text, dimensions, rights metadata, and archive/restore.
 - [ ] `in_progress` Connect binary upload, processing state, renditions, usage,
       and storage failure recovery.
 - [ ] `pending` Pass the shared taxonomy/media acceptance journey.
+
+### Category management acceptance criteria
+
+- Categories have their own searchable, status-filtered navigation destination
+  with backend-confirmed create, archive, and restore operations.
+- Article authoring and Homepage Studio can create a category contextually,
+  select it immediately, and preserve the unfinished form or layout.
+- Homepage publishing validates the draft before submission, forwards stable
+  backend errors, and completes an unchanged versioned replacement.
+- Homepage Studio uses the same bounded phone-device proportions as the article
+  composer instead of stretching with the available column.
 
 ## 3. Newsroom publishing
 

@@ -20,6 +20,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Icon, type IconName } from "@/components/icons/icon";
+import { getCategories } from "@/features/categories/api/categories";
+import { CategoryCreateDialog } from "@/features/categories/components/category-create-dialog";
 import { createArticle, updateArticle } from "@/features/articles/api/articles";
 import {
   articleDraftSchema,
@@ -27,7 +29,6 @@ import {
 } from "@/features/articles/schemas/article.schema";
 import type { Article } from "@/lib/api/contracts";
 import type { ArticleCategory } from "@/lib/api/contracts";
-import { getCategories } from "@/features/homepage/api/homepage";
 
 import { ArticlePhonePreview } from "./article-phone-preview";
 import { SectionEditor, type EditableSection } from "./section-editor";
@@ -56,6 +57,7 @@ export function ArticleComposer({ article }: { article?: Article }) {
   const [summary, setSummary] = useState(article?.summary ?? "");
   const [categoryId, setCategoryId] = useState(article?.category.id ?? "");
   const [categories, setCategories] = useState<ArticleCategory[]>([]);
+  const [creatingCategory, setCreatingCategory] = useState(false);
   const [heroImageUrl, setHeroImageUrl] = useState(article?.heroImageUrl ?? "");
   const [sections, setSections] = useState<EditableSection[]>(() =>
     article
@@ -200,7 +202,13 @@ export function ArticleComposer({ article }: { article?: Article }) {
               <span>Category</span>
               <select
                 value={categoryId}
-                onChange={(event) => setCategoryId(event.target.value)}
+                onChange={(event) => {
+                  if (event.target.value === "__new_category__") {
+                    setCreatingCategory(true);
+                    return;
+                  }
+                  setCategoryId(event.target.value);
+                }}
               >
                 <option value="">Select a category</option>
                 {categories.map((category) => (
@@ -208,6 +216,7 @@ export function ArticleComposer({ article }: { article?: Article }) {
                     {category.name}
                   </option>
                 ))}
+                <option value="__new_category__">New category…</option>
               </select>
               {errors.categoryId ? (
                 <small className="field-error">{errors.categoryId}</small>
@@ -301,6 +310,20 @@ export function ArticleComposer({ article }: { article?: Article }) {
           sections={sections}
         />
       </form>
+      <CategoryCreateDialog
+        open={creatingCategory}
+        sortOrder={categories.length}
+        onClose={() => setCreatingCategory(false)}
+        onCreated={(category) => {
+          setCategories((current) => [...current, category]);
+          setCategoryId(category.id);
+          setErrors((current) => {
+            const next = { ...current };
+            delete next.categoryId;
+            return next;
+          });
+        }}
+      />
     </main>
   );
 }

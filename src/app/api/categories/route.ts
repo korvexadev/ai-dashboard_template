@@ -8,9 +8,17 @@ import type {
 import { callAuthenticatedBackend } from "@/lib/api/authenticated";
 import { sessionRequired, upstreamJson } from "@/lib/api/route-response";
 
-export async function GET(): Promise<NextResponse> {
-  const result =
-    await callAuthenticatedBackend<ArticleCategoryCollection>("/categories");
+export async function GET(request: Request): Promise<NextResponse> {
+  const url = new URL(request.url);
+  const query = new URLSearchParams();
+  const search = url.searchParams.get("search");
+  const status = url.searchParams.get("status");
+  if (search) query.set("search", search);
+  if (status) query.set("status", status);
+  const suffix = query.size ? `?${query.toString()}` : "";
+  const result = await callAuthenticatedBackend<ArticleCategoryCollection>(
+    `/categories${suffix}`,
+  );
   return result
     ? upstreamJson(result, "Categories could not be loaded.")
     : sessionRequired();
