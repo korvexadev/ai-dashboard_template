@@ -13,6 +13,8 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 - [x] `done` Normalize the operator UI with readable typography,
       conventional workspace hierarchy, restrained status treatments, and
       consistent responsive tables, forms, navigation, and feedback states.
+- [x] `done` Refresh the Overview with the new airy, red-led CMS
+      visual language while preserving authoritative analytics and routes.
 - [ ] `in_progress` Establish server/client authentication boundaries, common error
       mapping, URL-owned table state, audit context, and observability.
 
@@ -30,6 +32,20 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
   availability without invented editorial metrics.
 - Desktop, tablet, and mobile layouts remain keyboard accessible and avoid
   clipped actions, unreadable tables, or horizontal page overflow.
+
+### Overview visual refresh acceptance criteria
+
+- Keep the existing authenticated shell, Overview route, analytics endpoint,
+  refresh behavior, and article destination unchanged.
+- Use only server-confirmed analytics; do not invent trends, events, or
+  editorial performance claims.
+- Prioritize four primary totals, article status, recent workspace pulse, and
+  operational activity in an airy red-led composition inspired by the supplied
+  dashboard reference.
+- Keep visible copy to headings, short labels, and the content being presented.
+  Loading and failure states remain clear, accessible, and recoverable.
+- Preserve usable desktop, tablet, and mobile layouts with visible focus,
+  reduced-motion support, and no horizontal page overflow.
 
 ## 1. Phone identity and admin access
 

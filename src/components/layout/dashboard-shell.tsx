@@ -78,11 +78,6 @@ export function DashboardShell({ children, profile }: DashboardShellProps) {
   const displayName = profile.displayName?.trim()
     ? profile.displayName
     : "Mikozi admin";
-  const today = new Intl.DateTimeFormat("en-MW", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(new Date());
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
@@ -210,12 +205,17 @@ export function DashboardShell({ children, profile }: DashboardShellProps) {
 
       <div className="dashboard-workspace">
         <header className="workspace-header">
-          <div>
-            <p>{today}</p>
-            <h1>Good day, {firstName(displayName)}.</h1>
-          </div>
+          <span className="workspace-identity">
+            <Icon name="dashboard" />
+            Mikozi newsroom
+          </span>
           <div className="header-actions">
-            <Link className="create-button" href="/articles/new">
+            <Link
+              className="create-button"
+              href="/articles/new"
+              aria-label="Create article"
+              title="Create article"
+            >
               <Icon name="plus" /> <span>Create article</span>
             </Link>
           </div>
@@ -224,10 +224,6 @@ export function DashboardShell({ children, profile }: DashboardShellProps) {
       </div>
     </div>
   );
-}
-
-function firstName(name: string): string {
-  return name.split(" ")[0] ?? name;
 }
 
 function formatRole(role?: string): string {
