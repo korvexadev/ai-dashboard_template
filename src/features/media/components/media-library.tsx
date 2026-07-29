@@ -9,6 +9,8 @@ import {
 } from "react";
 
 import { Icon } from "@/components/icons/icon";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   createMedia,
   listMedia,
@@ -109,12 +111,8 @@ export function MediaLibrary() {
     <main className="article-workspace library-page">
       <header className="module-page-heading">
         <div>
-          <p className="eyebrow">Newsroom assets</p>
           <h2>Media library</h2>
-          <p>
-            Register approved image sources and retain captions, accessibility,
-            dimensions, and rights metadata.
-          </p>
+          <p>Images and editorial metadata.</p>
         </div>
         <button
           className="solid-button"
@@ -128,13 +126,7 @@ export function MediaLibrary() {
 
       <div className="module-notice">
         <Icon name="media" />
-        <div>
-          <strong>External storage registration</strong>
-          <p>
-            Mikozi saves the canonical asset URL and editorial metadata. Direct
-            object upload will use the future storage adapter.
-          </p>
-        </div>
+        <strong>External URLs only</strong>
       </div>
 
       {error ? (
@@ -150,10 +142,7 @@ export function MediaLibrary() {
           onSubmit={(event) => void submit(event)}
         >
           <header>
-            <div>
-              <h3>Register image</h3>
-              <p>All assets require useful alternative text.</p>
-            </div>
+            <h3>Register image</h3>
           </header>
           <div className="module-form-grid">
             <Field label="Title">
@@ -197,21 +186,23 @@ export function MediaLibrary() {
               />
             </Field>
             <Field label="MIME type">
-              <select
+              <SearchableSelect
+                ariaLabel="MIME type"
                 value={form.mimeType}
-                onChange={(event) =>
+                options={[
+                  { value: "image/jpeg", label: "JPEG" },
+                  { value: "image/png", label: "PNG" },
+                  { value: "image/webp", label: "WebP" },
+                  { value: "image/gif", label: "GIF" },
+                ]}
+                onChange={(value) =>
                   setForm({
                     ...form,
-                    mimeType: event.target
-                      .value as CreateMediaAsset["mimeType"],
+                    mimeType: value as CreateMediaAsset["mimeType"],
                   })
                 }
-              >
-                <option value="image/jpeg">JPEG</option>
-                <option value="image/png">PNG</option>
-                <option value="image/webp">WebP</option>
-                <option value="image/gif">GIF</option>
-              </select>
+                searchPlaceholder="Search formats"
+              />
             </Field>
             <Field label="Rights holder">
               <input
@@ -272,25 +263,37 @@ export function MediaLibrary() {
       ) : null}
 
       <section className="library-toolbar">
-        <label>
-          <Icon name="search" />
-          <input
-            type="search"
-            placeholder="Search media"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
+        <div className="articles-library-title">
+          <h3>Library</h3>
+          <p>{total} assets</p>
+        </div>
+        <div className="article-table-tools">
+          <label className="article-search">
+            <Icon name="search" />
+            <input
+              type="search"
+              placeholder="Search media"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          <SearchableSelect
+            ariaLabel="Media status"
+            className="article-status-filter"
+            value={status}
+            options={[
+              { value: "", label: "All statuses" },
+              { value: "ready", label: "Ready", status: "ready" },
+              {
+                value: "archived",
+                label: "Archived",
+                status: "archived",
+              },
+            ]}
+            onChange={(value) => setStatus(value as typeof status)}
+            searchPlaceholder="Search statuses"
           />
-        </label>
-        <select
-          aria-label="Media status"
-          value={status}
-          onChange={(event) => setStatus(event.target.value as typeof status)}
-        >
-          <option value="">All status</option>
-          <option value="ready">Ready</option>
-          <option value="archived">Archived</option>
-        </select>
-        <span>{total} assets</span>
+        </div>
       </section>
 
       {loading ? (
@@ -311,11 +314,7 @@ export function MediaLibrary() {
               />
               <div className="library-card-copy">
                 <div>
-                  <span
-                    className={`account-status account-status-${item.status}`}
-                  >
-                    {item.status}
-                  </span>
+                  <StatusBadge status={item.status} />
                   <small>{item.mimeType.replace("image/", "")}</small>
                 </div>
                 <h3>{item.title}</h3>
@@ -337,7 +336,6 @@ export function MediaLibrary() {
       ) : (
         <div className="history-empty">
           <h4>No media assets found</h4>
-          <p>Register the first approved image source for the newsroom.</p>
         </div>
       )}
     </main>

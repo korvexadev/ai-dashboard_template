@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons/icon";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   ArticleApiError,
   deleteArticle,
@@ -21,6 +22,7 @@ export function ArticleReader({ slug }: { slug: string }) {
   const [error, setError] = useState<{ message: string; notFound: boolean }>();
   const [actionError, setActionError] = useState<string>();
   const [workingAction, setWorkingAction] = useState<string>();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   useEffect(() => {
     void getArticle(slug)
@@ -39,6 +41,15 @@ export function ArticleReader({ slug }: { slug: string }) {
         });
       });
   }, [slug]);
+
+  useEffect(() => {
+    if (!confirmingDelete) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setConfirmingDelete(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [confirmingDelete]);
 
   if (error) {
     return (
@@ -90,13 +101,7 @@ export function ArticleReader({ slug }: { slug: string }) {
   }
 
   async function remove() {
-    if (
-      !window.confirm(
-        `Delete “${currentArticle.title}”? It will be removed from the newsroom.`,
-      )
-    ) {
-      return;
-    }
+    setConfirmingDelete(false);
     setActionError(undefined);
     setWorkingAction("delete");
     try {
@@ -126,7 +131,7 @@ export function ArticleReader({ slug }: { slug: string }) {
           </Link>
         </nav>
         <div className="reader-toolbar-actions">
-          <span className="status-chip">{article.status}</span>
+          <StatusBadge status={article.status} />
           <Link
             className="reader-action-button"
             href={`/articles/${article.slug}/edit`}
@@ -149,7 +154,7 @@ export function ArticleReader({ slug }: { slug: string }) {
               className="reader-delete-action"
               type="button"
               disabled={Boolean(workingAction)}
-              onClick={() => void remove()}
+              onClick={() => setConfirmingDelete(true)}
             >
               {workingAction === "delete" ? "Deleting…" : "Delete"}
             </button>
@@ -164,7 +169,7 @@ export function ArticleReader({ slug }: { slug: string }) {
       <article className="reader-sheet">
         <header>
           <p className="reader-edition">
-            Version {article.version} · {article.slug}
+            {article.category.name} · Version {article.version}
           </p>
           <h1>{article.title}</h1>
           <p className="reader-summary">{article.summary}</p>
@@ -193,37 +198,54 @@ export function ArticleReader({ slug }: { slug: string }) {
         aria-labelledby="engagement-heading"
       >
         <header>
-          <div>
-            <p className="eyebrow">Reader engagement</p>
-            <h2 id="engagement-heading">Comments and likes</h2>
-          </div>
+          <h2 id="engagement-heading">Reader engagement</h2>
           <span>Planned</span>
         </header>
         <div>
           <article>
             <Icon name="activity" />
-            <div>
-              <strong>Likes</strong>
-              <p>
-                Counts and reader reactions will appear here when the engagement
-                API is connected.
-              </p>
-            </div>
+            <strong>Likes</strong>
             <span>Not available</span>
           </article>
           <article>
             <Icon name="articles" />
-            <div>
-              <strong>Comments</strong>
-              <p>
-                Comment review, moderation state, and replies will live in this
-                article context.
-              </p>
-            </div>
+            <strong>Comments</strong>
             <span>Not available</span>
           </article>
         </div>
       </section>
+      {confirmingDelete ? (
+        <div className="reader-confirm-overlay">
+          <section
+            className="reader-confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-article-heading"
+          >
+            <span className="reader-confirm-icon">
+              <Icon name="trash" />
+            </span>
+            <h2 id="delete-article-heading">Delete article?</h2>
+            <p>{article.title}</p>
+            <div>
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setConfirmingDelete(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="confirm-delete-button"
+                type="button"
+                onClick={() => void remove()}
+              >
+                Delete
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }

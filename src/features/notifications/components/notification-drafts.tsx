@@ -9,6 +9,8 @@ import {
 } from "react";
 
 import { Icon } from "@/components/icons/icon";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { listMedia } from "@/features/media/api/media";
 import {
   createNotificationDraft,
@@ -132,12 +134,8 @@ export function NotificationDrafts() {
     <main className="article-workspace notification-page">
       <header className="module-page-heading">
         <div>
-          <p className="eyebrow">Audience communication</p>
           <h2>Notifications</h2>
-          <p>
-            Prepare push notification content and targeting before delivery is
-            connected.
-          </p>
+          <p>Push drafts and targeting.</p>
         </div>
         <button
           className="solid-button"
@@ -151,13 +149,7 @@ export function NotificationDrafts() {
 
       <div className="module-notice module-notice-warning">
         <Icon name="bell" />
-        <div>
-          <strong>FCM delivery is not connected</strong>
-          <p>
-            Saving a draft does not send, schedule, or mark a notification as
-            delivered. Delivery will be added through a durable FCM job later.
-          </p>
-        </div>
+        <strong>Delivery is not connected</strong>
       </div>
 
       {error ? (
@@ -173,10 +165,7 @@ export function NotificationDrafts() {
           onSubmit={(event) => void submit(event)}
         >
           <header>
-            <div>
-              <h3>Create notification draft</h3>
-              <p>Content remains editable and unsent.</p>
-            </div>
+            <h3>Create notification draft</h3>
             <span className="role-pill">Push · Draft</span>
           </header>
           <div className="module-form-grid">
@@ -203,37 +192,41 @@ export function NotificationDrafts() {
               <small>{form.body.length}/500 characters</small>
             </Field>
             <Field label="Priority">
-              <select
+              <SearchableSelect
+                ariaLabel="Priority"
                 value={form.priority}
-                onChange={(event) =>
+                options={[
+                  { value: "low", label: "Low" },
+                  { value: "normal", label: "Normal" },
+                  { value: "high", label: "High" },
+                  { value: "urgent", label: "Urgent" },
+                ]}
+                onChange={(value) =>
                   setForm({
                     ...form,
-                    priority: event.target
-                      .value as CreateNotificationDraft["priority"],
+                    priority: value as CreateNotificationDraft["priority"],
                   })
                 }
-              >
-                <option value="low">Low</option>
-                <option value="normal">Normal</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
+                searchPlaceholder="Search priorities"
+              />
             </Field>
             <Field label="Audience">
-              <select
+              <SearchableSelect
+                ariaLabel="Audience"
                 value={form.targetType}
-                onChange={(event) =>
+                options={[
+                  { value: "all_readers", label: "All readers" },
+                  { value: "dashboard_users", label: "Dashboard users" },
+                  { value: "specific_readers", label: "Specific readers" },
+                ]}
+                onChange={(value) =>
                   setForm({
                     ...form,
-                    targetType: event.target
-                      .value as CreateNotificationDraft["targetType"],
+                    targetType: value as CreateNotificationDraft["targetType"],
                   })
                 }
-              >
-                <option value="all_readers">All readers</option>
-                <option value="dashboard_users">Dashboard users</option>
-                <option value="specific_readers">Specific readers</option>
-              </select>
+                searchPlaceholder="Search audiences"
+              />
             </Field>
             {form.targetType === "specific_readers" ? (
               <Field label="Reader IDs" wide>
@@ -247,22 +240,25 @@ export function NotificationDrafts() {
               </Field>
             ) : null}
             <Field label="Image">
-              <select
+              <SearchableSelect
+                ariaLabel="Image"
                 value={form.imageAssetId ?? ""}
-                onChange={(event) =>
+                options={[
+                  { value: "", label: "No image" },
+                  ...media.map((asset) => ({
+                    value: asset.id,
+                    label: asset.title,
+                    keywords: asset.fileName,
+                  })),
+                ]}
+                onChange={(value) =>
                   setForm({
                     ...form,
-                    imageAssetId: event.target.value || null,
+                    imageAssetId: value || null,
                   })
                 }
-              >
-                <option value="">No image</option>
-                {media.map((asset) => (
-                  <option key={asset.id} value={asset.id}>
-                    {asset.title}
-                  </option>
-                ))}
-              </select>
+                searchPlaceholder="Search images"
+              />
             </Field>
             <Field label="Intended delivery time">
               <input
@@ -300,25 +296,37 @@ export function NotificationDrafts() {
       ) : null}
 
       <section className="library-toolbar">
-        <label>
-          <Icon name="search" />
-          <input
-            type="search"
-            placeholder="Search notification drafts"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
+        <div className="articles-library-title">
+          <h3>Drafts</h3>
+          <p>{items.length} shown</p>
+        </div>
+        <div className="article-table-tools">
+          <label className="article-search">
+            <Icon name="search" />
+            <input
+              type="search"
+              placeholder="Search drafts"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          <SearchableSelect
+            ariaLabel="Notification status"
+            className="article-status-filter"
+            value={status}
+            options={[
+              { value: "", label: "All statuses" },
+              { value: "draft", label: "Draft", status: "draft" },
+              {
+                value: "cancelled",
+                label: "Cancelled",
+                status: "cancelled",
+              },
+            ]}
+            onChange={(value) => setStatus(value as typeof status)}
+            searchPlaceholder="Search statuses"
           />
-        </label>
-        <select
-          aria-label="Notification status"
-          value={status}
-          onChange={(event) => setStatus(event.target.value as typeof status)}
-        >
-          <option value="">All status</option>
-          <option value="draft">Draft</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-        <span>{items.length} shown</span>
+        </div>
       </section>
 
       <section className="notification-list">
@@ -350,7 +358,7 @@ export function NotificationDrafts() {
                   <span className={`priority-pill priority-${item.priority}`}>
                     {item.priority}
                   </span>
-                  <span className="account-status">{item.status}</span>
+                  <StatusBadge status={item.status} />
                 </div>
                 <h3>{item.title}</h3>
                 <p>{item.body}</p>
@@ -372,7 +380,6 @@ export function NotificationDrafts() {
         ) : (
           <div className="history-empty">
             <h4>No notification drafts found</h4>
-            <p>Create a draft now and connect delivery through FCM later.</p>
           </div>
         )}
       </section>

@@ -1,11 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons/icon";
+import {
+  SearchableMultiSelect,
+  SearchableSelect,
+} from "@/components/ui/searchable-select";
 import { getCategories } from "@/features/categories/api/categories";
-import { CategoryCreateDialog } from "@/features/categories/components/category-create-dialog";
 import {
   getHomepageLayout,
   getPublishedArticles,
@@ -47,7 +49,6 @@ export function HomepageEditor() {
   const [sections, setSections] = useState<DraftSection[]>([]);
   const [version, setVersion] = useState(1);
   const [autoFillMore, setAutoFillMore] = useState(true);
-  const [creatingCategory, setCreatingCategory] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -220,21 +221,17 @@ export function HomepageEditor() {
     <main className="homepage-studio">
       <header className="homepage-studio-header">
         <div>
-          <p className="eyebrow">Mobile experience</p>
-          <h2>Homepage studio</h2>
-          <p>
-            Control navigation, story layouts, curation, and automatic filling
-            from one versioned document.
-          </p>
+          <h2>Homepage</h2>
+          <p>Version {version}</p>
         </div>
         <div className="homepage-save-block">
-          <small>Current version {version}</small>
           <button
             className="solid-button"
             type="button"
             onClick={() => void save()}
             disabled={saving || duplicateCount > 0}
           >
+            <Icon name="checkCircle" />
             {saving ? "Saving…" : "Publish layout"}
           </button>
         </div>
@@ -254,23 +251,8 @@ export function HomepageEditor() {
           <section className="homepage-control-section">
             <div className="homepage-section-title">
               <div>
+                <span className="homepage-step">01</span>
                 <h3>Category navigation</h3>
-                <p>
-                  Choose the primary rail, More menu, or hide a category from
-                  the mobile homepage.
-                </p>
-              </div>
-              <div className="homepage-category-actions">
-                <Link className="text-button" href="/categories">
-                  Manage categories
-                </Link>
-                <button
-                  className="outline-button"
-                  type="button"
-                  onClick={() => setCreatingCategory(true)}
-                >
-                  <Icon name="plus" /> New category
-                </button>
               </div>
             </div>
 
@@ -280,12 +262,15 @@ export function HomepageEditor() {
                 checked={autoFillMore}
                 onChange={(event) => setAutoFillMore(event.target.checked)}
               />
-              Prefill unassigned categories under More
+              Send unplaced categories to More
             </label>
 
             <div className="category-placement-list">
               {activeCategories.map((category) => (
-                <div className="category-placement-row" key={category.id}>
+                <div
+                  className={`category-placement-row${activeTab === category.id ? " active" : ""}`}
+                  key={category.id}
+                >
                   <button
                     className="category-name-button"
                     type="button"
@@ -296,25 +281,24 @@ export function HomepageEditor() {
                       /{category.slug}, {category.articleCount} articles
                     </small>
                   </button>
-                  <label>
-                    <span className="sr-only">
-                      Placement for {category.name}
-                    </span>
-                    <select
-                      value={placements[category.id] ?? "auto"}
-                      onChange={(event) =>
-                        setPlacements((current) => ({
-                          ...current,
-                          [category.id]: event.target.value as Placement,
-                        }))
-                      }
-                    >
-                      <option value="auto">Auto More</option>
-                      <option value="top">Top navigation</option>
-                      <option value="more">Under More</option>
-                      <option value="hidden">Hidden</option>
-                    </select>
-                  </label>
+                  <SearchableSelect
+                    ariaLabel={`Placement for ${category.name}`}
+                    className="category-placement-select"
+                    value={placements[category.id] ?? "auto"}
+                    options={[
+                      { value: "auto", label: "Auto More" },
+                      { value: "top", label: "Top navigation" },
+                      { value: "more", label: "Under More" },
+                      { value: "hidden", label: "Hidden" },
+                    ]}
+                    onChange={(value) =>
+                      setPlacements((current) => ({
+                        ...current,
+                        [category.id]: value as Placement,
+                      }))
+                    }
+                    searchPlaceholder="Search placements"
+                  />
                 </div>
               ))}
             </div>
@@ -323,11 +307,8 @@ export function HomepageEditor() {
           <section className="homepage-control-section">
             <div className="homepage-section-title">
               <div>
-                <h3>Sections by category</h3>
-                <p>
-                  Automatic sections use the newest eligible stories and skip
-                  anything already shown above.
-                </p>
+                <span className="homepage-step">02</span>
+                <h3>Content sections</h3>
               </div>
               {activeTab ? (
                 <button
@@ -385,7 +366,6 @@ export function HomepageEditor() {
               ) : (
                 <div className="homepage-empty">
                   <strong>No sections in this tab</strong>
-                  <p>Add a section to define how its articles appear.</p>
                 </div>
               )}
             </div>
@@ -398,22 +378,8 @@ export function HomepageEditor() {
           activeTab={activeTab}
           sections={tabSections}
           articles={articles}
-          autoFillMore={autoFillMore}
         />
       </div>
-      <CategoryCreateDialog
-        open={creatingCategory}
-        sortOrder={categories.length}
-        onClose={() => setCreatingCategory(false)}
-        onCreated={(category) => {
-          setCategories((current) => [...current, category]);
-          setPlacements((current) => ({ ...current, [category.id]: "auto" }));
-          setActiveTab(category.id);
-          setNotice(
-            `${category.name} was created. Choose its placement before publishing.`,
-          );
-        }}
-      />
     </main>
   );
 }
@@ -480,10 +446,16 @@ function SectionCard({
       <div className="homepage-section-fields">
         <label>
           <span>Layout</span>
-          <select
+          <SearchableSelect
+            ariaLabel="Section layout"
             value={section.type}
-            onChange={(event) => {
-              const type = event.target.value as DraftSection["type"];
+            options={sectionOptions.map((option) => ({
+              value: option.value,
+              label: option.label,
+              keywords: option.description,
+            }))}
+            onChange={(value) => {
+              const type = value as DraftSection["type"];
               onChange({
                 type,
                 populationMode:
@@ -495,13 +467,8 @@ function SectionCard({
                 advertPlacementCode: null,
               });
             }}
-          >
-            {sectionOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            searchPlaceholder="Search layouts"
+          />
         </label>
         <label>
           <span>Section title</span>
@@ -516,23 +483,25 @@ function SectionCard({
           <>
             <label>
               <span>Population</span>
-              <select
+              <SearchableSelect
+                ariaLabel="Section population"
                 value={section.populationMode}
-                onChange={(event) =>
+                options={[
+                  { value: "automatic", label: "Automatic" },
+                  { value: "curated", label: "Curated" },
+                  {
+                    value: "hybrid",
+                    label: "Curated then automatic",
+                  },
+                ]}
+                onChange={(value) =>
                   onChange({
-                    populationMode: event.target
-                      .value as DraftSection["populationMode"],
-                    articleIds:
-                      event.target.value === "automatic"
-                        ? []
-                        : section.articleIds,
+                    populationMode: value as DraftSection["populationMode"],
+                    articleIds: value === "automatic" ? [] : section.articleIds,
                   })
                 }
-              >
-                <option value="automatic">Automatic</option>
-                <option value="curated">Curated</option>
-                <option value="hybrid">Curated then automatic</option>
-              </select>
+                searchPlaceholder="Search population modes"
+              />
             </label>
             <label>
               <span>Item limit</span>
@@ -553,48 +522,35 @@ function SectionCard({
       {contentSection && section.populationMode !== "automatic" ? (
         <label className="homepage-multi-select">
           <span>Curated published articles</span>
-          <select
-            multiple
+          <SearchableMultiSelect
+            ariaLabel="Curated published articles"
             value={section.articleIds}
-            onChange={(event) =>
-              onChange({
-                articleIds: Array.from(
-                  event.currentTarget.selectedOptions,
-                  (option) => option.value,
-                ),
-              })
-            }
-          >
-            {articles.map((article) => (
-              <option key={article.id} value={article.id}>
-                {article.title}
-              </option>
-            ))}
-          </select>
-          <small>Use Ctrl or Command to select multiple stories.</small>
+            options={articles.map((article) => ({
+              value: article.id,
+              label: article.title,
+              keywords: article.slug,
+            }))}
+            onChange={(articleIds) => onChange({ articleIds })}
+            placeholder="Select published articles"
+            searchPlaceholder="Search published articles"
+          />
         </label>
       ) : null}
       {section.type === "categories" ? (
         <label className="homepage-multi-select">
           <span>Linked categories</span>
-          <select
-            multiple
+          <SearchableMultiSelect
+            ariaLabel="Linked categories"
             value={section.categoryIds}
-            onChange={(event) =>
-              onChange({
-                categoryIds: Array.from(
-                  event.currentTarget.selectedOptions,
-                  (option) => option.value,
-                ),
-              })
-            }
-          >
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+            options={categories.map((category) => ({
+              value: category.id,
+              label: category.name,
+              keywords: category.slug,
+            }))}
+            onChange={(categoryIds) => onChange({ categoryIds })}
+            placeholder="Select categories"
+            searchPlaceholder="Search categories"
+          />
         </label>
       ) : null}
       {section.type === "advert" ? (
@@ -619,14 +575,12 @@ function HomepagePhonePreview({
   activeTab,
   sections,
   articles,
-  autoFillMore,
 }: {
   categories: ArticleCategory[];
   placements: Record<string, Placement>;
   activeTab: string;
   sections: DraftSection[];
   articles: ArticleSummary[];
-  autoFillMore: boolean;
 }) {
   const top = categories.filter(
     (category) => placements[category.id] === "top",
@@ -636,10 +590,7 @@ function HomepagePhonePreview({
   return (
     <aside className="homepage-preview-panel">
       <div className="preview-panel-heading">
-        <div>
-          <h3>Live mobile structure</h3>
-          <p>Content eligibility is confirmed when the backend saves.</p>
-        </div>
+        <h3>Mobile preview</h3>
         <span>Draft</span>
       </div>
       <div className="phone-device homepage-phone-device">
@@ -712,11 +663,6 @@ function HomepagePhonePreview({
           </div>
         </div>
       </div>
-      <p className="homepage-preview-note">
-        {autoFillMore
-          ? "Unassigned active categories will appear under More."
-          : "Only explicitly placed categories will be visible."}
-      </p>
     </aside>
   );
 }

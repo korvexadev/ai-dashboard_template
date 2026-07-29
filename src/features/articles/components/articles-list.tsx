@@ -5,6 +5,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { Icon } from "@/components/icons/icon";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   ArticleApiError,
   listArticles,
@@ -83,30 +85,32 @@ export function ArticlesList() {
   const offset = Number(query.get("offset") ?? 0);
   const sortBy = query.get("sortBy") ?? "updatedAt";
   const sortDirection = query.get("sortDirection") === "asc" ? "asc" : "desc";
+  const filtersActive = Boolean(query.get("search") || query.get("status"));
 
   return (
     <main className="article-workspace">
       <div className="page-title-row">
         <div>
           <h2>Articles</h2>
-          <p>Find, review, update, publish, archive, and remove articles.</p>
+          <p>Manage the newsroom library.</p>
         </div>
-        <Link className="solid-button" href="/articles/new">
-          <Icon name="plus" /> New article
-        </Link>
       </div>
 
       <section className="articles-panel">
         <header className="articles-table-header">
-          <div>
-            <h3>All articles</h3>
-            <p>
+          <div className="articles-library-title">
+            <h3>Library</h3>
+            <p aria-live="polite">
               {collection
                 ? `${collection.total} ${collection.total === 1 ? "article" : "articles"}`
-                : "Loading newsroom…"}
+                : "Loading"}
             </p>
           </div>
-          <form className="article-table-tools" onSubmit={submitSearch}>
+          <form
+            className="article-table-tools"
+            onSubmit={submitSearch}
+            aria-label="Filter articles"
+          >
             <label className="article-search">
               <span className="sr-only">Search articles</span>
               <Icon name="search" />
@@ -114,28 +118,57 @@ export function ArticlesList() {
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search title, summary, or slug"
+                placeholder="Search articles"
                 maxLength={120}
               />
             </label>
-            <label>
-              <span className="sr-only">Filter by status</span>
-              <select
-                value={query.get("status") ?? ""}
-                onChange={(event) =>
-                  replaceQuery({
-                    status: event.target.value || undefined,
-                    offset: "0",
-                  })
-                }
+            <SearchableSelect
+              ariaLabel="Filter by status"
+              className="article-status-filter"
+              value={query.get("status") ?? ""}
+              options={[
+                { value: "", label: "All statuses" },
+                { value: "draft", label: "Draft", status: "draft" },
+                {
+                  value: "published",
+                  label: "Published",
+                  status: "published",
+                },
+                {
+                  value: "archived",
+                  label: "Archived",
+                  status: "archived",
+                },
+              ]}
+              onChange={(value) =>
+                replaceQuery({
+                  status: value || undefined,
+                  offset: "0",
+                })
+              }
+              searchPlaceholder="Search statuses"
+            />
+            {filtersActive ? (
+              <button
+                className="article-clear-filters"
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  router.replace(pathname);
+                }}
               >
-                <option value="">All statuses</option>
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-                <option value="archived">Archived</option>
-              </select>
-            </label>
-            <button type="submit">Search</button>
+                Clear
+              </button>
+            ) : null}
+            <button
+              className="article-search-submit"
+              type="submit"
+              aria-label="Search articles"
+              title="Search articles"
+            >
+              <Icon name="search" />
+              <span>Search</span>
+            </button>
           </form>
         </header>
 
@@ -215,20 +248,35 @@ export function ArticlesList() {
                 <tbody>
                   {collection.items.map((article) => (
                     <tr key={article.id}>
-                      <td>
+                      <td className="article-title-cell">
                         <Link href={`/articles/${article.slug}`}>
                           <strong>{article.title}</strong>
                           <span>{article.summary}</span>
                           <small>{article.slug}</small>
                         </Link>
                       </td>
-                      <td>
-                        <span className="status-chip">{article.status}</span>
+                      <td data-label="Status">
+                        <StatusBadge status={article.status} />
                       </td>
-                      <td>{article.sectionCount}</td>
-                      <td>{article.author.displayName ?? "Mikozi admin"}</td>
-                      <td>{formatDate(article.updatedAt)}</td>
-                      <td>
+                      <td data-label="Sections">{article.sectionCount}</td>
+                      <td data-label="Author">
+                        <span className="article-author">
+                          <i aria-hidden="true">
+                            {initials(
+                              article.author.displayName ?? "Mikozi admin",
+                            )}
+                          </i>
+                          <span>
+                            {article.author.displayName ?? "Mikozi admin"}
+                          </span>
+                        </span>
+                      </td>
+                      <td data-label="Updated">
+                        <time dateTime={article.updatedAt}>
+                          {formatDate(article.updatedAt)}
+                        </time>
+                      </td>
+                      <td className="article-open-cell">
                         <Link
                           className="row-arrow"
                           href={`/articles/${article.slug}`}
@@ -314,4 +362,13 @@ function formatDate(value: string): string {
     month: "short",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }

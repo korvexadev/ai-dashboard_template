@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { Icon } from "@/components/icons/icon";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { listAudience } from "@/features/audience/api/audience";
 import { listSubscriptionPlans } from "@/features/subscriptions/api/subscriptions";
 import type {
@@ -97,23 +98,24 @@ export function AudienceList() {
       <div className="page-title-row">
         <div>
           <h2>Audience</h2>
-          <p>
-            Find readers and inspect their access, activity, and subscription.
-          </p>
+          <p>Readers, access and subscriptions.</p>
         </div>
       </div>
 
       <section className="articles-panel audience-panel">
         <header className="articles-table-header">
-          <div>
-            <h3>All users</h3>
+          <div className="articles-library-title">
+            <h3>All readers</h3>
             <p>
               {collection
                 ? `${collection.total} ${collection.total === 1 ? "user" : "users"}`
-                : "Loading audience data..."}
+                : "Loading…"}
             </p>
           </div>
-          <form className="audience-tools" onSubmit={submitSearch}>
+          <form
+            className="article-table-tools audience-tools"
+            onSubmit={submitSearch}
+          >
             <label className="article-search">
               <span className="sr-only">Search audience</span>
               <Icon name="search" />
@@ -125,39 +127,46 @@ export function AudienceList() {
                 maxLength={120}
               />
             </label>
-            <label>
-              <span className="sr-only">Filter access</span>
-              <select
-                value={query.get("access") ?? "all"}
-                onChange={(event) =>
-                  replaceQuery({ access: event.target.value, offset: "0" })
-                }
-              >
-                <option value="all">All access</option>
-                <option value="reader">Mobile readers</option>
-                <option value="admin">Administrators</option>
-              </select>
-            </label>
-            <label>
-              <span className="sr-only">Filter subscription</span>
-              <select
-                value={query.get("planId") ?? ""}
-                onChange={(event) =>
-                  replaceQuery({
-                    planId: event.target.value || undefined,
-                    offset: "0",
-                  })
-                }
-              >
-                <option value="">All plans</option>
-                {plans.map((plan) => (
-                  <option key={plan.id} value={plan.id}>
-                    {plan.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button type="submit">Search</button>
+            <SearchableSelect
+              ariaLabel="Filter by access"
+              className="article-status-filter"
+              value={query.get("access") ?? "all"}
+              options={[
+                { value: "all", label: "All access" },
+                { value: "reader", label: "Mobile readers" },
+                { value: "admin", label: "Administrators" },
+              ]}
+              onChange={(value) => replaceQuery({ access: value, offset: "0" })}
+              searchPlaceholder="Search access"
+            />
+            <SearchableSelect
+              ariaLabel="Filter by subscription"
+              className="article-status-filter"
+              value={query.get("planId") ?? ""}
+              options={[
+                { value: "", label: "All plans" },
+                ...plans.map((plan) => ({
+                  value: plan.id,
+                  label: plan.name,
+                  status: plan.status,
+                })),
+              ]}
+              onChange={(value) =>
+                replaceQuery({
+                  planId: value || undefined,
+                  offset: "0",
+                })
+              }
+              searchPlaceholder="Search plans"
+            />
+            <button
+              className="article-search-submit"
+              type="submit"
+              aria-label="Search audience"
+            >
+              <Icon name="search" />
+              <span>Search</span>
+            </button>
           </form>
         </header>
 
@@ -189,8 +198,7 @@ export function AudienceList() {
         {collection?.items.length === 0 ? (
           <div className="list-state">
             <Icon name="users" />
-            <h3>No users match this view.</h3>
-            <p>Change the search, access, or subscription filter.</p>
+            <h3>No readers found</h3>
             <button
               type="button"
               onClick={() => {
@@ -241,7 +249,7 @@ export function AudienceList() {
                 <tbody>
                   {collection.items.map((user) => (
                     <tr key={user.id}>
-                      <td>
+                      <td className="audience-title-cell">
                         <Link
                           className="audience-user-cell"
                           href={`/audience/${user.id}`}
@@ -257,25 +265,27 @@ export function AudienceList() {
                           </span>
                         </Link>
                       </td>
-                      <td>
+                      <td data-label="Access">
                         <span className="access-label">
                           {formatAccess(user.adminRole)}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Subscription">
                         <strong>{user.entitlement.plan.name}</strong>
                         <small className="table-subcopy">
                           {formatPlanLimit(user.entitlement)}
                         </small>
                       </td>
-                      <td>
+                      <td data-label="Today">
                         {user.entitlement.administratorBypass
                           ? "Unlimited"
                           : `${user.entitlement.articlesReadToday} read`}
                       </td>
-                      <td>{formatRelative(user.lastActiveAt)}</td>
-                      <td>{formatDate(user.createdAt)}</td>
-                      <td>
+                      <td data-label="Last active">
+                        {formatRelative(user.lastActiveAt)}
+                      </td>
+                      <td data-label="Joined">{formatDate(user.createdAt)}</td>
+                      <td className="audience-open-cell">
                         <Link
                           className="row-arrow"
                           href={`/audience/${user.id}`}

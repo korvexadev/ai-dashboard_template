@@ -3,6 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons/icon";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   createSubscriptionPlan,
   listSubscriptionPlans,
@@ -147,15 +149,19 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
       <div className="page-title-row">
         <div>
           <h2>Subscriptions</h2>
-          <p>
-            Control plan pricing and daily article access for mobile readers.
-          </p>
+          <p>Plans, pricing and daily access.</p>
         </div>
-        {canManage ? (
-          <button className="solid-button" type="button" onClick={beginCreate}>
-            <Icon name="plus" /> New plan
-          </button>
-        ) : null}
+        <div className="subscription-page-actions">
+          {canManage ? (
+            <button
+              className="solid-button"
+              type="button"
+              onClick={beginCreate}
+            >
+              <Icon name="plus" /> New plan
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {error && !plans ? (
@@ -182,8 +188,8 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
           <div className="plan-inventory">
             <header>
               <div>
-                <h3>Available plans</h3>
-                <p>{plans.length} configured plans</p>
+                <h3>Plans</h3>
+                <p>{plans.length} configured</p>
               </div>
             </header>
             <div className="plan-list">
@@ -222,7 +228,7 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
                   {creating
                     ? "New paid plan"
                     : selected?.planType === "free"
-                      ? "Required default"
+                      ? "Default plan"
                       : "Plan settings"}
                 </p>
                 <h3>
@@ -230,17 +236,8 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
                     ? "Create subscription"
                     : (selected?.name ?? "Select a plan")}
                 </h3>
-                <p>
-                  {selected?.planType === "free"
-                    ? "Every reader without an active assignment uses this plan."
-                    : "Changes affect the server-owned mobile entitlement."}
-                </p>
               </div>
-              {selected ? (
-                <span className={`account-status ${selected.status}`}>
-                  {selected.status}
-                </span>
-              ) : null}
+              {selected ? <StatusBadge status={selected.status} /> : null}
             </header>
 
             {error ? (
@@ -270,7 +267,6 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
                       maxLength={60}
                       required
                     />
-                    <small>Stable lowercase identifier used by clients.</small>
                   </label>
                 ) : null}
 
@@ -305,21 +301,22 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
                   <>
                     <label>
                       Billing period
-                      <select
+                      <SearchableSelect
+                        ariaLabel="Billing period"
                         value={form.billingPeriod}
-                        onChange={(event) =>
+                        options={[
+                          { value: "monthly", label: "Monthly" },
+                          { value: "yearly", label: "Yearly" },
+                        ]}
+                        onChange={(value) =>
                           setForm({
                             ...form,
-                            billingPeriod: event.target.value as
-                              | "monthly"
-                              | "yearly",
+                            billingPeriod: value as "monthly" | "yearly",
                           })
                         }
                         disabled={!canManage}
-                      >
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Yearly</option>
-                      </select>
+                        searchPlaceholder="Search billing periods"
+                      />
                     </label>
                     <label>
                       Price
@@ -335,20 +332,23 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
                           required
                           disabled={!canManage}
                         />
-                        <select
-                          aria-label="Currency"
+                        <SearchableSelect
+                          ariaLabel="Currency"
+                          className="currency-select"
                           value={form.currency}
-                          onChange={(event) =>
+                          options={[
+                            { value: "MWK", label: "MWK" },
+                            { value: "USD", label: "USD" },
+                          ]}
+                          onChange={(value) =>
                             setForm({
                               ...form,
-                              currency: event.target.value,
+                              currency: value,
                             })
                           }
                           disabled={!canManage}
-                        >
-                          <option value="MWK">MWK</option>
-                          <option value="USD">USD</option>
-                        </select>
+                          searchPlaceholder="Search currencies"
+                        />
                       </span>
                     </label>
                   </>
@@ -373,9 +373,6 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
                       (selected?.planType !== "free" && form.unlimited)
                     }
                   />
-                  <small>
-                    Distinct articles a non-admin reader can open each UTC day.
-                  </small>
                 </label>
 
                 {selected?.planType !== "free" ? (
@@ -397,21 +394,30 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
                     {!creating ? (
                       <label>
                         Status
-                        <select
+                        <SearchableSelect
+                          ariaLabel="Plan status"
                           value={form.status}
-                          onChange={(event) =>
+                          options={[
+                            {
+                              value: "active",
+                              label: "Active",
+                              status: "active",
+                            },
+                            {
+                              value: "inactive",
+                              label: "Inactive",
+                              status: "inactive",
+                            },
+                          ]}
+                          onChange={(value) =>
                             setForm({
                               ...form,
-                              status: event.target.value as
-                                | "active"
-                                | "inactive",
+                              status: value as "active" | "inactive",
                             })
                           }
                           disabled={!canManage}
-                        >
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                        </select>
+                          searchPlaceholder="Search statuses"
+                        />
                       </label>
                     ) : null}
                   </>
@@ -419,11 +425,7 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
                   <div className="free-plan-lock full-field">
                     <Icon name="checkCircle" />
                     <span>
-                      <strong>Free access is protected</strong>
-                      <small>
-                        This plan stays active and always has a finite daily
-                        limit.
-                      </small>
+                      <strong>Free plan stays active</strong>
                     </span>
                   </div>
                 )}
@@ -450,6 +452,7 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
                   type="submit"
                   disabled={saving}
                 >
+                  <Icon name="checkCircle" />
                   {saving
                     ? "Saving..."
                     : creating

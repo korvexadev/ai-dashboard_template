@@ -75,6 +75,20 @@ export function DashboardShell({ children, profile }: DashboardShellProps) {
   const pathname = usePathname();
   const [loggingOut, setLoggingOut] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const showCreateArticle =
+    ![
+      "/articles/new",
+      "/categories",
+      "/homepage",
+      "/audience",
+      "/subscriptions",
+      "/media-library",
+      "/notifications",
+      "/users",
+      "/audit-logs",
+    ].includes(pathname) &&
+    !pathname.startsWith("/audience/") &&
+    !pathname.endsWith("/edit");
   const displayName = profile.displayName?.trim()
     ? profile.displayName
     : "Mikozi admin";
@@ -210,14 +224,16 @@ export function DashboardShell({ children, profile }: DashboardShellProps) {
             Mikozi newsroom
           </span>
           <div className="header-actions">
-            <Link
-              className="create-button"
-              href="/articles/new"
-              aria-label="Create article"
-              title="Create article"
-            >
-              <Icon name="plus" /> <span>Create article</span>
-            </Link>
+            {showCreateArticle ? (
+              <Link
+                className="create-button"
+                href="/articles/new"
+                aria-label="Create article"
+                title="Create article"
+              >
+                <Icon name="plus" /> <span>Create article</span>
+              </Link>
+            ) : null}
           </div>
         </header>
         {children}

@@ -17,10 +17,7 @@ export function ArticlePhonePreview({
   return (
     <aside className="phone-preview-panel" aria-label="Live phone preview">
       <header>
-        <div>
-          <span>Live preview</span>
-          <strong>Mobile article</strong>
-        </div>
+        <strong>Mobile preview</strong>
         <span className="preview-live-dot">Live</span>
       </header>
       <div className="phone-device">
@@ -56,7 +53,6 @@ export function ArticlePhonePreview({
           </article>
         </div>
       </div>
-      <p>Updates as you type. Scroll inside the device to review the story.</p>
     </aside>
   );
 }

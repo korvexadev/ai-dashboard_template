@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Icon, type IconName } from "@/components/icons/icon";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { getCategories } from "@/features/categories/api/categories";
 import { CategoryCreateDialog } from "@/features/categories/components/category-create-dialog";
 import { createArticle, updateArticle } from "@/features/articles/api/articles";
@@ -146,7 +147,7 @@ export function ArticleComposer({ article }: { article?: Article }) {
 
   return (
     <main className="article-workspace">
-      <div className="page-title-row">
+      <div className="page-title-row composer-title-row">
         <div>
           <Link className="back-link" href="/articles">
             <Icon name="back" /> Articles
@@ -154,8 +155,8 @@ export function ArticleComposer({ article }: { article?: Article }) {
           <h2>{editing ? "Edit article" : "New article"}</h2>
           <p>
             {editing
-              ? `Create revision ${Number(article?.version ?? 0) + 1} from the current article.`
-              : "Add the story details and arrange its sections."}
+              ? `Revision ${Number(article?.version ?? 0) + 1}`
+              : "Draft a new story."}
           </p>
         </div>
         <button
@@ -164,13 +165,14 @@ export function ArticleComposer({ article }: { article?: Article }) {
           form="article-composer"
           disabled={saving}
         >
+          <Icon name="checkCircle" />
           {saving ? "Saving…" : editing ? "Save new revision" : "Save draft"}
         </button>
       </div>
 
       <form id="article-composer" className="composer-grid" onSubmit={submit}>
         <div className="composer-main">
-          <section className="article-details-card">
+          <section className="article-details-card" aria-label="Story details">
             <label>
               <span>Headline</span>
               <input
@@ -200,24 +202,28 @@ export function ArticleComposer({ article }: { article?: Article }) {
             </label>
             <label>
               <span>Category</span>
-              <select
+              <SearchableSelect
+                ariaLabel="Category"
                 value={categoryId}
-                onChange={(event) => {
-                  if (event.target.value === "__new_category__") {
+                options={[
+                  { value: "", label: "Select a category" },
+                  ...categories.map((category) => ({
+                    value: category.id,
+                    label: category.name,
+                    keywords: category.slug,
+                  })),
+                  { value: "__new_category__", label: "New category…" },
+                ]}
+                onChange={(value) => {
+                  if (value === "__new_category__") {
                     setCreatingCategory(true);
                     return;
                   }
-                  setCategoryId(event.target.value);
+                  setCategoryId(value);
                 }}
-              >
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-                <option value="__new_category__">New category…</option>
-              </select>
+                placeholder="Select a category"
+                searchPlaceholder="Search categories"
+              />
               {errors.categoryId ? (
                 <small className="field-error">{errors.categoryId}</small>
               ) : null}
@@ -239,10 +245,7 @@ export function ArticleComposer({ article }: { article?: Article }) {
           </section>
 
           <div className="sections-heading">
-            <div>
-              <h3>Article sections</h3>
-              <p>Drag sections into place or use the arrow controls.</p>
-            </div>
+            <h3>Article sections</h3>
             <span>{sections.length}</span>
           </div>
           <div className="section-add-toolbar">

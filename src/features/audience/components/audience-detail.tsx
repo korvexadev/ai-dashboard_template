@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons/icon";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   deleteAudienceUser,
   getAudienceHistory,
@@ -42,6 +44,9 @@ export function AudienceDetail({
   const [saving, setSaving] = useState(false);
   const [accountAction, setAccountAction] = useState<
     "status" | "delete" | undefined
+  >();
+  const [confirmAction, setConfirmAction] = useState<
+    "disable" | "delete" | undefined
   >();
   const [historyCategory, setHistoryCategory] =
     useState<AudienceHistoryCategory>("comments");
@@ -97,6 +102,15 @@ export function AudienceDetail({
     };
   }, [historyCategory, id]);
 
+  useEffect(() => {
+    if (!confirmAction) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setConfirmAction(undefined);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [confirmAction]);
+
   async function assign() {
     if (!user || !selectedPlanId) return;
     setSaving(true);
@@ -121,14 +135,7 @@ export function AudienceDetail({
   async function changeAccountStatus() {
     if (!user) return;
     const status = user.status === "active" ? "disabled" : "active";
-    if (
-      status === "disabled" &&
-      !window.confirm(
-        `Disable ${user.displayName ?? `+${user.phoneNumber}`}? Every active session will be signed out immediately.`,
-      )
-    ) {
-      return;
-    }
+    setConfirmAction(undefined);
     setAccountAction("status");
     setError(undefined);
     try {
@@ -151,13 +158,7 @@ export function AudienceDetail({
 
   async function removeAccount() {
     if (!user) return;
-    if (
-      !window.confirm(
-        `Delete ${user.displayName ?? `+${user.phoneNumber}`}? The account will lose access and disappear from Audience. Historical activity will be retained.`,
-      )
-    ) {
-      return;
-    }
+    setConfirmAction(undefined);
     setAccountAction("delete");
     setError(undefined);
     try {
@@ -226,9 +227,7 @@ export function AudienceDetail({
         <div>
           <div className="audience-profile-labels">
             <span className="access-label">{formatAccess(user.adminRole)}</span>
-            <span className={`account-status account-status-${user.status}`}>
-              {user.status}
-            </span>
+            <StatusBadge status={user.status} />
           </div>
           <h2>{user.displayName ?? "Unnamed user"}</h2>
           <p>+{user.phoneNumber}</p>
@@ -238,7 +237,11 @@ export function AudienceDetail({
             <button
               type="button"
               disabled={Boolean(accountAction)}
-              onClick={() => void changeAccountStatus()}
+              onClick={() =>
+                user.status === "active"
+                  ? setConfirmAction("disable")
+                  : void changeAccountStatus()
+              }
             >
               {accountAction === "status"
                 ? "Updating..."
@@ -250,7 +253,7 @@ export function AudienceDetail({
               className="danger-action"
               type="button"
               disabled={Boolean(accountAction)}
-              onClick={() => void removeAccount()}
+              onClick={() => setConfirmAction("delete")}
             >
               {accountAction === "delete" ? "Deleting..." : "Delete account"}
             </button>
@@ -274,7 +277,6 @@ export function AudienceDetail({
           <article className="audience-detail-section">
             <header>
               <h3>Account details</h3>
-              <p>Identity and operational access information.</p>
             </header>
             <dl className="audience-facts">
               <Fact label="Phone" value={`+${user.phoneNumber}`} />
@@ -305,7 +307,6 @@ export function AudienceDetail({
           <article className="audience-detail-section">
             <header>
               <h3>Profile</h3>
-              <p>Reader-managed information currently stored by Mikozi.</p>
             </header>
             <div className="audience-bio">
               {user.bio ? <p>{user.bio}</p> : <p>No biography provided.</p>}
@@ -363,18 +364,19 @@ export function AudienceDetail({
             <div className="assignment-control">
               <label>
                 Assign plan
-                <select
+                <SearchableSelect
+                  ariaLabel="Assign plan"
                   value={selectedPlanId}
-                  onChange={(event) => setSelectedPlanId(event.target.value)}
-                >
-                  {plans
+                  options={plans
                     .filter((plan) => plan.status === "active")
-                    .map((plan) => (
-                      <option key={plan.id} value={plan.id}>
-                        {plan.name}
-                      </option>
-                    ))}
-                </select>
+                    .map((plan) => ({
+                      value: plan.id,
+                      label: plan.name,
+                      status: plan.status,
+                    }))}
+                  onChange={setSelectedPlanId}
+                  searchPlaceholder="Search plans"
+                />
               </label>
               <button
                 className="solid-button"
@@ -388,10 +390,6 @@ export function AudienceDetail({
               >
                 {saving ? "Saving..." : "Save subscription"}
               </button>
-              <p>
-                Assigning Free removes the current paid assignment. The change
-                takes effect immediately.
-              </p>
             </div>
           ) : (
             <p className="assignment-readonly">
@@ -403,14 +401,7 @@ export function AudienceDetail({
 
       <section className="audience-history-section">
         <header>
-          <div>
-            <p className="eyebrow">User history</p>
-            <h3>Activity and billing record</h3>
-            <p>
-              Persisted events only. Activity that has not happened is not
-              estimated.
-            </p>
-          </div>
+          <h3>History</h3>
           {history ? (
             <span className="history-total">
               {history.total} {history.total === 1 ? "record" : "records"}
@@ -460,6 +451,51 @@ export function AudienceDetail({
           )}
         </div>
       </section>
+      {confirmAction ? (
+        <div className="reader-confirm-overlay">
+          <section
+            className="reader-confirm-dialog audience-confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="audience-confirm-heading"
+          >
+            <span className="reader-confirm-icon">
+              <Icon name={confirmAction === "delete" ? "trash" : "users"} />
+            </span>
+            <h2 id="audience-confirm-heading">
+              {confirmAction === "delete"
+                ? "Delete account?"
+                : "Disable account?"}
+            </h2>
+            <p>{user.displayName ?? `+${user.phoneNumber}`}</p>
+            <small>
+              {confirmAction === "delete"
+                ? "Access ends immediately. Historical activity is retained."
+                : "Every active session will be signed out."}
+            </small>
+            <div>
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setConfirmAction(undefined)}
+              >
+                Cancel
+              </button>
+              <button
+                className="confirm-delete-button"
+                type="button"
+                onClick={() =>
+                  confirmAction === "delete"
+                    ? void removeAccount()
+                    : void changeAccountStatus()
+                }
+              >
+                {confirmAction === "delete" ? "Delete" : "Disable"}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }

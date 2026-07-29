@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons/icon";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   getCategories,
   updateCategory,
@@ -80,25 +82,24 @@ export function CategoryManagement() {
   }
 
   return (
-    <main className="category-workspace">
+    <main className="article-workspace category-workspace">
       <header className="page-title-row">
         <div>
           <h2>Categories</h2>
-          <p>
-            Organize articles and control the category catalog used by mobile
-            navigation.
-          </p>
+          <p>Article groups and mobile navigation.</p>
         </div>
-        <button
-          className="solid-button"
-          type="button"
-          onClick={() => setCreating(true)}
-        >
-          <Icon name="plus" /> New category
-        </button>
+        <div className="category-page-actions">
+          <button
+            className="solid-button"
+            type="button"
+            onClick={() => setCreating(true)}
+          >
+            <Icon name="plus" /> New category
+          </button>
+        </div>
       </header>
 
-      <section className="category-panel">
+      <section className="category-panel" aria-label="Category catalog">
         <form
           className="category-filters"
           onSubmit={(event) => {
@@ -106,30 +107,35 @@ export function CategoryManagement() {
             setFilters({ search: searchDraft.trim() });
           }}
         >
-          <label>
-            <span>Search categories</span>
-            <div>
-              <Icon name="search" />
-              <input
-                value={searchDraft}
-                onChange={(event) => setSearchDraft(event.target.value)}
-                placeholder="Name or slug"
-              />
-            </div>
+          <label className="article-search">
+            <span className="sr-only">Search categories</span>
+            <Icon name="search" />
+            <input
+              type="search"
+              value={searchDraft}
+              onChange={(event) => setSearchDraft(event.target.value)}
+              placeholder="Search categories"
+            />
           </label>
-          <label>
-            <span>Status</span>
-            <select
-              value={status ?? ""}
-              onChange={(event) => setFilters({ status: event.target.value })}
-            >
-              <option value="">All statuses</option>
-              <option value="active">Active</option>
-              <option value="archived">Archived</option>
-            </select>
-          </label>
-          <button className="outline-button" type="submit">
-            Search
+          <SearchableSelect
+            ariaLabel="Filter categories by status"
+            className="article-status-filter"
+            value={status ?? ""}
+            options={[
+              { value: "", label: "All statuses" },
+              { value: "active", label: "Active", status: "active" },
+              {
+                value: "archived",
+                label: "Archived",
+                status: "archived",
+              },
+            ]}
+            onChange={(value) => setFilters({ status: value })}
+            searchPlaceholder="Search statuses"
+          />
+          <button className="article-search-submit" type="submit">
+            <Icon name="search" />
+            <span>Search</span>
           </button>
         </form>
 
@@ -158,32 +164,43 @@ export function CategoryManagement() {
                 {categories.map((category) => (
                   <tr key={category.id}>
                     <td>
-                      <strong>{category.name}</strong>
-                      <small>/{category.slug}</small>
+                      <span className="category-order-marker">
+                        {String(category.sortOrder + 1).padStart(2, "0")}
+                      </span>
+                      <span>
+                        <strong>{category.name}</strong>
+                        <small>/{category.slug}</small>
+                      </span>
                     </td>
                     <td>
-                      <span className={`status-chip ${category.status}`}>
-                        {category.status}
-                      </span>
+                      <StatusBadge status={category.status} />
                     </td>
                     <td>{category.articleCount}</td>
                     <td>{category.sortOrder + 1}</td>
                     <td>
                       <button
-                        className={
-                          category.status === "active"
-                            ? "text-button danger-text"
-                            : "text-button"
-                        }
+                        className={`category-status-action${category.status === "active" ? " is-archive" : ""}`}
                         type="button"
                         onClick={() => void changeStatus(category)}
                         disabled={updatingId === category.id}
+                        aria-label={
+                          updatingId === category.id
+                            ? `Updating ${category.name}`
+                            : category.status === "active"
+                              ? `Archive ${category.name}`
+                              : `Restore ${category.name}`
+                        }
+                        title={
+                          category.status === "active"
+                            ? "Archive category"
+                            : "Restore category"
+                        }
                       >
-                        {updatingId === category.id
-                          ? "Updating…"
-                          : category.status === "active"
-                            ? "Archive"
-                            : "Restore"}
+                        <Icon
+                          name={
+                            category.status === "active" ? "trash" : "arrowUp"
+                          }
+                        />
                       </button>
                     </td>
                   </tr>
@@ -194,7 +211,6 @@ export function CategoryManagement() {
         ) : (
           <div className="homepage-empty">
             <strong>No categories found</strong>
-            <p>Adjust the filters or create a category.</p>
           </div>
         )}
       </section>

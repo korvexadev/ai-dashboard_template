@@ -86,10 +86,7 @@ export function CategoryCreateDialog({
         }}
       >
         <header>
-          <div>
-            <h2 id="category-dialog-title">New category</h2>
-            <p>Create it here, then continue without leaving your work.</p>
-          </div>
+          <h2 id="category-dialog-title">New category</h2>
           <button
             className="text-button"
             type="button"

@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons/icon";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   listDashboardUsers,
   provisionDashboardUser,
@@ -67,12 +68,8 @@ export function DashboardUsers() {
     <main className="article-workspace dashboard-users-page">
       <div className="page-title-row">
         <div>
-          <p className="eyebrow">Super admin access</p>
           <h2>Dashboard users</h2>
-          <p>
-            Grant trusted operators access while keeping their Mikozi reader
-            identity intact.
-          </p>
+          <p>Operators, roles and access.</p>
         </div>
       </div>
 
@@ -82,12 +79,7 @@ export function DashboardUsers() {
             <Icon name="users" />
           </div>
           <div>
-            <p className="eyebrow">Add an operator</p>
-            <h3>Grant dashboard access</h3>
-            <p>
-              Add a user by phone number. They will still verify that number
-              with an OTP when signing in.
-            </p>
+            <h3>Add operator</h3>
           </div>
 
           <label>
@@ -116,31 +108,26 @@ export function DashboardUsers() {
           </label>
           <button className="solid-button" type="submit" disabled={saving}>
             <Icon name="plus" />
-            {saving ? "Adding user…" : "Add dashboard user"}
+            {saving ? "Adding…" : "Add operator"}
           </button>
-          <p className="provision-note">
-            <Icon name="checkCircle" />
-            Dashboard users can also sign in to the mobile app with the same
-            phone number.
-          </p>
         </form>
 
         <section className="dashboard-users-panel">
           <header>
-            <div>
-              <p className="eyebrow">Privileged identities</p>
-              <h3>People with dashboard access</h3>
+            <div className="articles-library-title">
+              <h3>Dashboard access</h3>
               <p>
                 {collection
-                  ? `${collection.total} active or recorded accounts`
-                  : "Loading authorized users…"}
+                  ? `${collection.total} ${collection.total === 1 ? "operator" : "operators"}`
+                  : "Loading…"}
               </p>
             </div>
             <button
-              className="outline-button"
+              className="outline-button refresh-button"
               type="button"
               onClick={() => void load()}
             >
+              <Icon name="activity" />
               Refresh
             </button>
           </header>
@@ -174,17 +161,15 @@ export function DashboardUsers() {
                         <small>+{user.phoneNumber}</small>
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Role">
                       <span className={`role-pill ${user.role}`}>
                         {user.role === "super_admin" ? "Super admin" : "Admin"}
                       </span>
                     </td>
-                    <td>
-                      <span className={`account-status ${user.status}`}>
-                        {user.status}
-                      </span>
+                    <td data-label="Status">
+                      <StatusBadge status={user.status} />
                     </td>
-                    <td>
+                    <td data-label="Added">
                       <time dateTime={user.createdAt}>
                         {formatDate(user.createdAt)}
                       </time>
@@ -198,7 +183,7 @@ export function DashboardUsers() {
           {collection?.items.length === 0 ? (
             <div className="list-state">
               <Icon name="users" />
-              <h3>No dashboard users yet.</h3>
+              <h3>No dashboard users</h3>
             </div>
           ) : null}
         </section>

@@ -1,7 +1,17 @@
 import type { AuditLogCollection } from "@/lib/api/contracts";
 
-export async function listAuditLogs(): Promise<AuditLogCollection> {
-  const response = await fetch("/api/audit-logs?limit=50&offset=0", {
+export async function listAuditLogs({
+  limit,
+  offset,
+}: {
+  limit: number;
+  offset: number;
+}): Promise<AuditLogCollection> {
+  const query = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  const response = await fetch(`/api/audit-logs?${query.toString()}`, {
     cache: "no-store",
   });
   const body = (await response.json()) as AuditLogCollection & {
