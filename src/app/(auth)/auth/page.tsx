@@ -11,25 +11,10 @@ export default async function AuthPage() {
 
   return (
     <main className="auth-page">
-      <aside className="auth-editorial">
-        <div className="auth-brand">
-          <BrandMark />
-          <span>Mikozi</span>
-        </div>
-        <div className="auth-editorial-copy">
-          <p className="eyebrow">The newsroom</p>
-          <h2>Every edition starts with a clear point of view.</h2>
-          <p>
-            Plan, shape and publish journalism that feels local, timely and
-            unmistakably Mikozi.
-          </p>
-        </div>
-        <div className="auth-edition">
-          <span>MW</span>
-          <span>Editorial workspace</span>
-          <span>2026</span>
-        </div>
-      </aside>
+      <div className="auth-brand">
+        <BrandMark />
+        <span>Mikozi</span>
+      </div>
       <AuthForm />
     </main>
   );

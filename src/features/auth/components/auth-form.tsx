@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { Icon } from "@/components/icons/icon";
@@ -8,6 +8,12 @@ import {
   formatPhoneForDisplay,
   phoneSchema,
 } from "@/features/auth/schemas/auth.schema";
+import {
+  applyOtpInput,
+  emptyOtpDigits,
+  OTP_LENGTH,
+  otpCode,
+} from "@/features/auth/otp-code";
 
 const REMEMBERED_PHONE_KEY = "mikozi:last-admin-phone";
 
@@ -23,11 +29,12 @@ interface ApiError {
 
 export function AuthForm() {
   const router = useRouter();
-  const codeInput = useRef<HTMLInputElement>(null);
+  const otpInputs = useRef<Array<HTMLInputElement | null>>([]);
+  const lastSubmittedCode = useRef<string | null>(null);
   const [step, setStep] = useState<"phone" | "code">("phone");
   const [phone, setPhone] = useState("");
   const [normalizedPhone, setNormalizedPhone] = useState("");
-  const [code, setCode] = useState("");
+  const [digits, setDigits] = useState(emptyOtpDigits);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [remember, setRemember] = useState(true);
   const [remaining, setRemaining] = useState(0);
@@ -43,7 +50,7 @@ export function AuthForm() {
   }, []);
 
   useEffect(() => {
-    if (step === "code") codeInput.current?.focus();
+    if (step === "code") otpInputs.current[0]?.focus();
   }, [step]);
 
   useEffect(() => {
@@ -79,6 +86,8 @@ export function AuthForm() {
       setChallenge(body);
       setNormalizedPhone(parsed.data);
       setRemaining(body.resendAfterSeconds);
+      setDigits(emptyOtpDigits());
+      lastSubmittedCode.current = null;
       setStep("code");
     } catch {
       setError("Could not reach Mikozi. Check your connection and try again.");
@@ -87,8 +96,8 @@ export function AuthForm() {
     }
   }
 
-  async function verifyCode() {
-    if (!challenge || !/^\d{6}$/.test(code)) {
+  async function verifyCode(codeToVerify = otpCode(digits)) {
+    if (!challenge || !/^\d{6}$/.test(codeToVerify) || busy) {
       setError("Enter the 6-digit code.");
       return;
     }
@@ -99,7 +108,10 @@ export function AuthForm() {
       const response = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ challengeId: challenge.challengeId, code }),
+        body: JSON.stringify({
+          challengeId: challenge.challengeId,
+          code: codeToVerify,
+        }),
       });
       const body = (await response.json()) as ApiError;
       if (!response.ok) {
@@ -124,19 +136,52 @@ export function AuthForm() {
   function editPhone() {
     setStep("phone");
     setChallenge(null);
-    setCode("");
+    setDigits(emptyOtpDigits());
+    lastSubmittedCode.current = null;
     setError("");
+  }
+
+  function updateDigit(index: number, value: string) {
+    const next = applyOtpInput(digits, index, value);
+    const nextCode = otpCode(next);
+    setDigits(next);
+    setError("");
+    if (nextCode !== lastSubmittedCode.current) {
+      lastSubmittedCode.current = null;
+    }
+
+    const nextEmpty = next.findIndex(
+      (digit, digitIndex) => digitIndex > index && !digit,
+    );
+    const focusIndex = nextEmpty >= 0 ? nextEmpty : Math.min(index + 1, 5);
+    otpInputs.current[focusIndex]?.focus();
+
+    if (/^\d{6}$/.test(nextCode) && !busy) {
+      lastSubmittedCode.current = nextCode;
+      void verifyCode(nextCode);
+    }
+  }
+
+  function handleOtpKeyDown(
+    event: KeyboardEvent<HTMLInputElement>,
+    index: number,
+  ) {
+    if (event.key === "Backspace" && !digits[index] && index > 0) {
+      otpInputs.current[index - 1]?.focus();
+    }
+    if (event.key === "ArrowLeft" && index > 0) {
+      event.preventDefault();
+      otpInputs.current[index - 1]?.focus();
+    }
+    if (event.key === "ArrowRight" && index < OTP_LENGTH - 1) {
+      event.preventDefault();
+      otpInputs.current[index + 1]?.focus();
+    }
   }
 
   return (
     <section className="auth-form-panel" aria-labelledby="auth-title">
       <div className="auth-form-inner">
-        <div className="auth-step-label">
-          <span>{step === "phone" ? "01" : "02"}</span>
-          <span aria-hidden="true" />
-          <span>Secure newsroom access</span>
-        </div>
-
         <h1 id="auth-title">
           {step === "phone" ? "Welcome to the desk." : "Check your messages."}
         </h1>
@@ -162,16 +207,13 @@ export function AuthForm() {
                 id="phone"
                 autoComplete="tel"
                 inputMode="tel"
-                placeholder="+265 88 140 2533"
+                placeholder="+265 88 100 1100"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
-                aria-describedby={error ? "auth-error" : "phone-hint"}
+                aria-describedby={error ? "auth-error" : undefined}
                 aria-invalid={Boolean(error)}
               />
             </div>
-            <p className="field-hint" id="phone-hint">
-              Malawi numbers only. Standard SMS rates may apply.
-            </p>
             <button className="primary-button" disabled={busy} type="submit">
               <span>{busy ? "Sending code…" : "Continue with phone"}</span>
               <span className="button-arrow" aria-hidden="true">
@@ -186,24 +228,39 @@ export function AuthForm() {
               void verifyCode();
             }}
           >
-            <label className="field-label" htmlFor="otp">
+            <span className="field-label" id="otp-label">
               Verification code
-            </label>
-            <input
-              ref={codeInput}
-              className="otp-field"
-              id="otp"
-              autoComplete="one-time-code"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="000000"
-              value={code}
-              onChange={(event) =>
-                setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
-              }
+            </span>
+            <div
+              className="otp-fields"
+              role="group"
+              aria-labelledby="otp-label"
               aria-describedby={error ? "auth-error" : "otp-hint"}
-              aria-invalid={Boolean(error)}
-            />
+            >
+              {digits.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(node) => {
+                    otpInputs.current[index] = node;
+                  }}
+                  className="otp-field"
+                  aria-label={`Digit ${index + 1} of ${OTP_LENGTH}`}
+                  aria-invalid={Boolean(error)}
+                  autoComplete={index === 0 ? "one-time-code" : "off"}
+                  inputMode="numeric"
+                  maxLength={index === 0 ? OTP_LENGTH : 1}
+                  disabled={busy}
+                  value={digit}
+                  onFocus={(event) => event.currentTarget.select()}
+                  onChange={(event) => updateDigit(index, event.target.value)}
+                  onKeyDown={(event) => handleOtpKeyDown(event, index)}
+                  onPaste={(event) => {
+                    event.preventDefault();
+                    updateDigit(index, event.clipboardData.getData("text"));
+                  }}
+                />
+              ))}
+            </div>
             <div className="otp-actions" id="otp-hint">
               <button type="button" onClick={editPhone}>
                 Change number
@@ -224,7 +281,11 @@ export function AuthForm() {
               />
               <span>Remember this phone number on this device</span>
             </label>
-            <button className="primary-button" disabled={busy} type="submit">
+            <button
+              className="primary-button"
+              disabled={busy || otpCode(digits).length !== OTP_LENGTH}
+              type="submit"
+            >
               <span>{busy ? "Verifying…" : "Enter newsroom"}</span>
               <span className="button-arrow" aria-hidden="true">
                 <Icon name="arrowRight" />
@@ -238,10 +299,6 @@ export function AuthForm() {
             {error}
           </p>
         ) : null}
-
-        <p className="auth-support">
-          Need access? Contact your newsroom administrator.
-        </p>
       </div>
     </section>
   );

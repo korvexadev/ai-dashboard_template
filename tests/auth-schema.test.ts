@@ -8,15 +8,15 @@ import {
 
 describe("phoneSchema", () => {
   it.each([
-    ["0881402533", "265881402533"],
-    ["881402533", "265881402533"],
-    ["265881402533", "265881402533"],
-    ["+265 881 402 533", "265881402533"],
+    ["0881001100", "265881001100"],
+    ["881001100", "265881001100"],
+    ["265881001100", "265881001100"],
+    ["+265 881 001 100", "265881001100"],
   ])("normalizes %s", (input, expected) => {
     expect(phoneSchema.parse(input)).toBe(expected);
   });
 
-  it.each(["", "+265881", "+266881402533", "+2658814025339"])(
+  it.each(["", "+265881", "+266881001100", "+2658810011009"])(
     "rejects %s",
     (input) => {
       expect(phoneSchema.safeParse(input).success).toBe(false);
@@ -24,7 +24,7 @@ describe("phoneSchema", () => {
   );
 
   it("formats a valid number without changing its value", () => {
-    expect(formatPhoneForDisplay("265881402533")).toBe("+265 881 402 533");
+    expect(formatPhoneForDisplay("265881001100")).toBe("+265 881 001 100");
   });
 });
 

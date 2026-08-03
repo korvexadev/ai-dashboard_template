@@ -63,6 +63,14 @@ export type CreateSubscriptionPlan =
   components["schemas"]["CreateSubscriptionPlanDto"];
 export type UpdateSubscriptionPlan =
   components["schemas"]["UpdateSubscriptionPlanDto"];
+export type ReaderAccessPolicy =
+  components["schemas"]["ReaderAccessPolicyResponseDto"];
+export type UpdateReaderAccessPolicy =
+  components["schemas"]["UpdateReaderAccessPolicyDto"];
+export type AdminPaymentTransaction =
+  components["schemas"]["AdminPaymentTransactionResponseDto"];
+export type AdminPaymentTransactionCollection =
+  components["schemas"]["AdminPaymentTransactionCollectionResponseDto"];
 export type MediaAsset = components["schemas"]["MediaAssetResponseDto"];
 export type MediaAssetCollection =
   components["schemas"]["MediaAssetCollectionResponseDto"];

@@ -405,6 +405,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/subscriptions/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReaderPaymentController_listPlans"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions/payment-methods/mobile-money/operators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReaderPaymentController_listOperators"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions/payments/mobile-money": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReaderPaymentController_mobileMoney"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions/payments/bank-transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReaderPaymentController_bankTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReaderPaymentController_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions/transactions/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReaderPaymentController_pending"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions/transactions/{id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReaderPaymentController_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscription-transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AdminSubscriptionTransactionController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscription-access-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SubscriptionAccessPolicyController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["SubscriptionAccessPolicyController_update"];
+        trace?: never;
+    };
+    "/api/v1/webhooks/paychangu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PayChanguWebhookController_receive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reader/articles/slug/{slug}": {
         parameters: {
             query?: never;
@@ -533,6 +693,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reader/categories/{slug}/articles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReaderCategoryArticlesController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reader/homepage": {
         parameters: {
             query?: never;
@@ -645,6 +821,7 @@ export interface components {
             role: "admin" | "super_admin";
             /** @enum {string} */
             status: "active" | "disabled";
+            canManage: boolean;
             /** Format: date-time */
             createdAt: string;
         };
@@ -888,6 +1065,10 @@ export interface components {
             articlesReadToday: number;
             articlesRemainingToday: number | null;
             administratorBypass: boolean;
+            globalFreeAccess: boolean;
+            /** Format: date-time */
+            globalFreeAccessEndsAt: string | null;
+            paymentsEnabled: boolean;
             /** Format: date-time */
             resetsAt: string;
         };
@@ -1085,6 +1266,148 @@ export interface components {
             dailyArticleLimit?: number | null;
             /** @enum {string} */
             status?: "active" | "inactive";
+        };
+        MobileMoneyOperatorResponseDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        MobileMoneyOperatorCollectionResponseDto: {
+            items: components["schemas"]["MobileMoneyOperatorResponseDto"][];
+        };
+        PaymentPlanResponseDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        BankPaymentAccountResponseDto: {
+            bankName: string;
+            accountName: string;
+            accountNumber: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        ReaderPaymentTransactionResponseDto: {
+            /** Format: uuid */
+            id: string;
+            plan: components["schemas"]["PaymentPlanResponseDto"];
+            /** @enum {string} */
+            method: "mobile_money" | "bank_transfer";
+            /** @enum {string} */
+            status: "pending" | "succeeded" | "failed" | "refunded";
+            amountMinor: number;
+            currency: string;
+            bankAccount: components["schemas"]["BankPaymentAccountResponseDto"] | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            completedAt: string | null;
+        };
+        InitiateMobileMoneyPaymentDto: {
+            /** Format: uuid */
+            planId: string;
+            /** Format: uuid */
+            operatorId: string;
+            /** @example 0991234567 */
+            phoneNumber?: string;
+        };
+        InitiateBankTransferPaymentDto: {
+            /** Format: uuid */
+            planId: string;
+        };
+        ReaderPaymentTransactionCollectionResponseDto: {
+            items: components["schemas"]["ReaderPaymentTransactionResponseDto"][];
+            total: number;
+        };
+        PendingPaymentResponseDto: {
+            transaction: components["schemas"]["ReaderPaymentTransactionResponseDto"] | null;
+        };
+        AdminPaymentReaderResponseDto: {
+            /** Format: uuid */
+            id: string;
+            displayName: string | null;
+            phoneNumber: string;
+        };
+        AdminPaymentTransactionResponseDto: {
+            /** Format: uuid */
+            id: string;
+            reader: components["schemas"]["AdminPaymentReaderResponseDto"];
+            plan: components["schemas"]["PaymentPlanResponseDto"];
+            /** Format: uuid */
+            subscriptionId: string | null;
+            /** @enum {string} */
+            type: "charge" | "refund";
+            /** @enum {string} */
+            status: "pending" | "succeeded" | "failed" | "refunded";
+            /** @enum {string} */
+            method: "mobile_money" | "bank_transfer" | "manual";
+            amountMinor: number;
+            currency: string;
+            chargeId: string | null;
+            /** Format: date-time */
+            occurredAt: string;
+            /** Format: date-time */
+            completedAt: string | null;
+        };
+        AdminPaymentTransactionCollectionResponseDto: {
+            items: components["schemas"]["AdminPaymentTransactionResponseDto"][];
+            total: number;
+        };
+        ReaderAccessPolicyResponseDto: {
+            freeAccessEnabled: boolean;
+            /** Format: date-time */
+            freeAccessStartsAt: string | null;
+            /** Format: date-time */
+            freeAccessEndsAt: string | null;
+            freeAccessActive: boolean;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        UpdateReaderAccessPolicyDto: {
+            freeAccessEnabled: boolean;
+            /** Format: date-time */
+            freeAccessStartsAt?: string | null;
+            /** Format: date-time */
+            freeAccessEndsAt?: string | null;
+        };
+        SimilarArticleResponseDto: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            title: string;
+            summary: string;
+            /** Format: uri */
+            heroImageUrl: string | null;
+            /** Format: date-time */
+            publishedAt: string | null;
+            category: components["schemas"]["ArticleCategoryResponseDto"];
+            /** @example 0.7425 */
+            similarityScore: number;
+        };
+        ReaderArticleResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** @example a-clear-specific-headline-9f5d4c3b */
+            slug: string;
+            /** @enum {string} */
+            status: "draft" | "published" | "archived";
+            availableTransitions: ("draft" | "published" | "archived")[];
+            canDelete: boolean;
+            version: number;
+            title: string;
+            summary: string;
+            category: components["schemas"]["ArticleCategoryResponseDto"];
+            heroImageUrl: string | null;
+            /** Format: date-time */
+            publishedAt: string | null;
+            author: components["schemas"]["ArticleAuthorResponseDto"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            sections: components["schemas"]["ArticleSectionResponseDto"][];
+            similarArticles: components["schemas"]["SimilarArticleResponseDto"][];
         };
         MediaCreatorResponseDto: {
             /** Format: uuid */
@@ -1344,6 +1667,13 @@ export interface components {
             /** Format: date-time */
             publishedAt: string | null;
             category: components["schemas"]["HomepageCategoryResponseDto"];
+        };
+        ReaderCategoryArticlesResponseDto: {
+            category: components["schemas"]["HomepageCategoryResponseDto"];
+            items: components["schemas"]["HomepageArticleResponseDto"][];
+            total: number;
+            limit: number;
+            offset: number;
         };
         HomepageSectionResponseDto: {
             /** Format: uuid */
@@ -1856,6 +2186,7 @@ export interface operations {
                 offset?: number;
                 search?: string;
                 access?: "all" | "reader" | "admin";
+                status?: "all" | "active" | "disabled";
                 planId?: string;
                 sortBy?: "displayName" | "createdAt" | "lastActiveAt";
                 sortDirection?: "asc" | "desc";
@@ -2184,6 +2515,269 @@ export interface operations {
             };
         };
     };
+    ReaderPaymentController_listPlans: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SubscriptionPlanCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReaderPaymentController_listOperators: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MobileMoneyOperatorCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReaderPaymentController_mobileMoney: {
+        parameters: {
+            query?: never;
+            header: {
+                "idempotency-key": string;
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InitiateMobileMoneyPaymentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReaderPaymentTransactionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReaderPaymentController_bankTransfer: {
+        parameters: {
+            query?: never;
+            header: {
+                "idempotency-key": string;
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InitiateBankTransferPaymentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReaderPaymentTransactionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReaderPaymentController_history: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReaderPaymentTransactionCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReaderPaymentController_pending: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PendingPaymentResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReaderPaymentController_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReaderPaymentTransactionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    AdminSubscriptionTransactionController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                search?: string;
+                status?: "all" | "pending" | "succeeded" | "failed" | "refunded";
+                method?: "all" | "mobile_money" | "bank_transfer" | "manual";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminPaymentTransactionCollectionResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    SubscriptionAccessPolicyController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReaderAccessPolicyResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    SubscriptionAccessPolicyController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReaderAccessPolicyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReaderAccessPolicyResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    PayChanguWebhookController_receive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ReaderArticleController_read: {
         parameters: {
             query?: never;
@@ -2201,7 +2795,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["ArticleResponseDto"];
+                        data: components["schemas"]["ReaderArticleResponseDto"];
                         meta: components["schemas"]["ApiMetaDto"];
                     };
                 };
@@ -2542,6 +3136,33 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["AdminHomepageLayoutResponseDto"];
+                        meta: components["schemas"]["ApiMetaDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReaderCategoryArticlesController_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReaderCategoryArticlesResponseDto"];
                         meta: components["schemas"]["ApiMetaDto"];
                     };
                 };

@@ -20,8 +20,26 @@ export async function provisionDashboardUser(
   });
 }
 
+export async function updateDashboardUserStatus(
+  readerId: string,
+  status: "active" | "disabled",
+): Promise<void> {
+  await request(`/api/audience/users/${encodeURIComponent(readerId)}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function deleteDashboardUser(readerId: string): Promise<void> {
+  await request(`/api/audience/users/${encodeURIComponent(readerId)}`, {
+    method: "DELETE",
+  });
+}
+
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { ...init, cache: "no-store" });
+  if (response.status === 204) return undefined as T;
   const body = (await response.json()) as T & {
     error?: { message?: string };
   };

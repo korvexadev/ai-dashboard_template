@@ -5,8 +5,10 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icons/icon";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
+  deleteDashboardUser,
   listDashboardUsers,
   provisionDashboardUser,
+  updateDashboardUserStatus,
 } from "@/features/dashboard-users/api/dashboard-users";
 import type {
   DashboardUser,
@@ -19,6 +21,14 @@ export function DashboardUsers() {
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string>();
   const [saving, setSaving] = useState(false);
+  const [accountAction, setAccountAction] = useState<{
+    readerId: string;
+    kind: "status" | "delete";
+  }>();
+  const [confirmAction, setConfirmAction] = useState<{
+    user: DashboardUser;
+    kind: "disable" | "delete";
+  }>();
 
   const load = useCallback(async () => {
     try {
@@ -61,6 +71,55 @@ export function DashboardUsers() {
       setError(message(caught, "The dashboard user could not be added."));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function changeStatus(
+    user: DashboardUser,
+    status: "active" | "disabled",
+  ) {
+    setConfirmAction(undefined);
+    setAccountAction({ readerId: user.readerId, kind: "status" });
+    setError(undefined);
+    try {
+      await updateDashboardUserStatus(user.readerId, status);
+      setCollection((current) =>
+        current
+          ? {
+              ...current,
+              items: current.items.map((item) =>
+                item.readerId === user.readerId ? { ...item, status } : item,
+              ),
+            }
+          : current,
+      );
+    } catch (caught: unknown) {
+      setError(message(caught, "The account status could not be changed."));
+    } finally {
+      setAccountAction(undefined);
+    }
+  }
+
+  async function remove(user: DashboardUser) {
+    setConfirmAction(undefined);
+    setAccountAction({ readerId: user.readerId, kind: "delete" });
+    setError(undefined);
+    try {
+      await deleteDashboardUser(user.readerId);
+      setCollection((current) =>
+        current
+          ? {
+              items: current.items.filter(
+                (item) => item.readerId !== user.readerId,
+              ),
+              total: Math.max(0, current.total - 1),
+            }
+          : current,
+      );
+    } catch (caught: unknown) {
+      setError(message(caught, "The account could not be deleted."));
+    } finally {
+      setAccountAction(undefined);
     }
   }
 
@@ -134,7 +193,11 @@ export function DashboardUsers() {
 
           {error ? (
             <div className="dashboard-users-error" role="alert">
-              <strong>Access could not be updated.</strong>
+              <strong>
+                {collection
+                  ? "Access could not be updated."
+                  : "Dashboard users could not be loaded."}
+              </strong>
               <p>{error}</p>
             </div>
           ) : null}
@@ -147,6 +210,9 @@ export function DashboardUsers() {
                   <th scope="col">Role</th>
                   <th scope="col">Status</th>
                   <th scope="col">Added</th>
+                  <th scope="col">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -174,6 +240,52 @@ export function DashboardUsers() {
                         {formatDate(user.createdAt)}
                       </time>
                     </td>
+                    <td className="dashboard-user-actions">
+                      {user.canManage ? (
+                        <>
+                          <button
+                            type="button"
+                            disabled={accountAction?.readerId === user.readerId}
+                            onClick={() =>
+                              user.status === "active"
+                                ? setConfirmAction({ user, kind: "disable" })
+                                : void changeStatus(user, "active")
+                            }
+                          >
+                            <Icon
+                              name={
+                                user.status === "active"
+                                  ? "users"
+                                  : "checkCircle"
+                              }
+                            />
+                            {accountAction?.readerId === user.readerId &&
+                            accountAction.kind === "status"
+                              ? "Updating…"
+                              : user.status === "active"
+                                ? "Disable"
+                                : "Enable"}
+                          </button>
+                          <button
+                            className="dashboard-user-delete"
+                            type="button"
+                            disabled={accountAction?.readerId === user.readerId}
+                            onClick={() =>
+                              setConfirmAction({ user, kind: "delete" })
+                            }
+                            aria-label={`Delete ${user.displayName ?? user.phoneNumber}`}
+                          >
+                            <Icon name="trash" />
+                            {accountAction?.readerId === user.readerId &&
+                            accountAction.kind === "delete"
+                              ? "Deleting…"
+                              : "Delete"}
+                          </button>
+                        </>
+                      ) : (
+                        <span className="protected-account">Protected</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -188,6 +300,56 @@ export function DashboardUsers() {
           ) : null}
         </section>
       </section>
+      {confirmAction ? (
+        <div className="reader-confirm-overlay">
+          <section
+            className="reader-confirm-dialog dashboard-user-confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dashboard-user-confirm-heading"
+          >
+            <span className="reader-confirm-icon">
+              <Icon
+                name={confirmAction.kind === "delete" ? "trash" : "users"}
+              />
+            </span>
+            <h2 id="dashboard-user-confirm-heading">
+              {confirmAction.kind === "delete"
+                ? "Delete account?"
+                : "Disable account?"}
+            </h2>
+            <p>
+              {confirmAction.user.displayName ??
+                `+${confirmAction.user.phoneNumber}`}
+            </p>
+            <small>
+              {confirmAction.kind === "delete"
+                ? "Access ends immediately. Historical activity is retained."
+                : "All active sessions will be signed out."}
+            </small>
+            <div>
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setConfirmAction(undefined)}
+              >
+                Cancel
+              </button>
+              <button
+                className="confirm-delete-button"
+                type="button"
+                onClick={() =>
+                  confirmAction.kind === "delete"
+                    ? void remove(confirmAction.user)
+                    : void changeStatus(confirmAction.user, "disabled")
+                }
+              >
+                {confirmAction.kind === "delete" ? "Delete" : "Disable"}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }

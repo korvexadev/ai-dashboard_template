@@ -32,7 +32,7 @@ const sectionOptions: Array<{
   {
     value: "horizontal_list",
     label: "Horizontal list",
-    description: "Swipeable story cards",
+    description: "Compact landscape story cards",
   },
   { value: "advert", label: "Advert", description: "Reserved ad placement" },
   {
@@ -635,19 +635,31 @@ function HomepagePhonePreview({
                       ))}
                     </div>
                   ) : (
-                    <div className="phone-story-list">
+                    <div
+                      className={`phone-story-list${
+                        section.type === "horizontal_list"
+                          ? " phone-horizontal-list"
+                          : ""
+                      }`}
+                    >
                       {chosen.map((article) => (
                         <article key={article.id}>
                           <div />
-                          <strong>{article.title}</strong>
+                          <span>
+                            <strong>{article.title}</strong>
+                            <small>{article.category.name}</small>
+                          </span>
                         </article>
                       ))}
                       {section.populationMode !== "curated" ? (
                         <article className="automatic-story">
                           <div />
-                          <strong>
-                            Automatic fill up to {section.itemLimit} stories
-                          </strong>
+                          <span>
+                            <strong>
+                              Automatic fill up to {section.itemLimit} stories
+                            </strong>
+                            <small>Published order</small>
+                          </span>
                         </article>
                       ) : null}
                     </div>

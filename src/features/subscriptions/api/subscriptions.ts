@@ -1,9 +1,25 @@
 import type {
   CreateSubscriptionPlan,
+  ReaderAccessPolicy,
   SubscriptionPlan,
   SubscriptionPlanCollection,
   UpdateSubscriptionPlan,
+  UpdateReaderAccessPolicy,
 } from "@/lib/api/contracts";
+
+export function getReaderAccessPolicy(): Promise<ReaderAccessPolicy> {
+  return request<ReaderAccessPolicy>("/api/subscription-access-policy");
+}
+
+export function updateReaderAccessPolicy(
+  input: UpdateReaderAccessPolicy,
+): Promise<ReaderAccessPolicy> {
+  return request<ReaderAccessPolicy>("/api/subscription-access-policy", {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+}
 
 export async function listSubscriptionPlans(): Promise<SubscriptionPlan[]> {
   const result = await request<SubscriptionPlanCollection>(

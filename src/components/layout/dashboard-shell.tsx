@@ -36,7 +36,12 @@ const navigation: Array<{
     href: "/subscriptions",
     available: true,
   },
-  { label: "Transactions", icon: "advert", href: "#", available: false },
+  {
+    label: "Transactions",
+    icon: "transactions",
+    href: "/transactions",
+    available: true,
+  },
   {
     label: "Media library",
     icon: "media",
@@ -82,6 +87,7 @@ export function DashboardShell({ children, profile }: DashboardShellProps) {
       "/homepage",
       "/audience",
       "/subscriptions",
+      "/transactions",
       "/media-library",
       "/notifications",
       "/users",

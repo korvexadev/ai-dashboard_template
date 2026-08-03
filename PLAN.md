@@ -19,6 +19,8 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
       Overview and Articles content geometry, typography, controls, and tables.
 - [x] `done` Replace native dropdowns with shared searchable controls, simplify
       redundant page actions, unify status badges, and paginate Activity Log.
+- [x] `done` Add the administrator transaction library with search, payment
+      filters, pagination, and links to the owning audience records.
 - [ ] `in_progress` Establish server/client authentication boundaries, common error
       mapping, URL-owned table state, audit context, and observability.
 
@@ -82,8 +84,12 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 
 - [x] `done` Build admin phone OTP sign-in, JWT refresh/logout, protected layouts,
       and safe expired/revoked-session recovery.
+- [x] `done` Simplify sign-in and provide six accessible OTP inputs with paste,
+      autofill, keyboard navigation, and automatic final-digit verification.
 - [x] `done` Build super-admin dashboard-user listing and phone-based
       provisioning with OTP and cross-client identity guidance.
+- [x] `done` Add protected enable, disable, and soft-delete controls to the
+      dashboard-user directory using the canonical account moderation flow.
 - [ ] `pending` Build permission-aware navigation, direct-route guards, roles,
       permission assignments, exceptions, and audit history.
 - [ ] `pending` Pass the shared identity/access acceptance journey with backend.
@@ -119,6 +125,8 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
 
 - [x] `done` Build category management, article assignment, and the versioned
       homepage-layout editor; topics and tags remain pending.
+- [x] `done` Make horizontal-list authoring and phone preview visibly distinct
+      from banners with compact landscape cards and metadata beneath media.
 - [x] `done` Refresh Categories and Mobile Homepage with the aligned,
       low-copy CMS visual language.
 - [x] `done` Build the searchable media registry with URL registration, caption,
@@ -241,6 +249,10 @@ the shared contract-first loop in `../backend/docs/DELIVERY_WORKFLOW.md`.
       low-copy CMS visual language.
 - [x] `done` Build super-admin account moderation and persisted reader
       comment, like, subscription, and transaction histories.
+- [x] `done` Keep disabled readers visible in Audience with URL-owned status
+      filtering and a direct route back to account reactivation.
+- [x] `done` Add an audited, scheduled global free-reading window that
+      suppresses reader payment surfaces while it is effective.
 - [ ] `in_progress` Build homepage/feed curation with top/More category
       placement, ordered section layouts, automatic/hybrid population,
       duplicate prevention, and a resolved mobile preview.

@@ -25,6 +25,7 @@ export type IconName =
   | "settings"
   | "text"
   | "trash"
+  | "transactions"
   | "video"
   | "users";
 
@@ -53,6 +54,12 @@ const paths: Record<IconName, React.ReactNode> = {
     <>
       <rect x="3" y="5" width="18" height="14" rx="3" />
       <path d="M7 15V9h3a2 2 0 0 1 0 4H7m8 2V9h2a3 3 0 0 1 0 6h-2Z" />
+    </>
+  ),
+  transactions: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="3" />
+      <path d="M3 10h18M7 15h4" />
     </>
   ),
   arrowUp: <path d="m6 15 6-6 6 6" />,

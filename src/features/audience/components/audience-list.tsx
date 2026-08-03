@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Icon } from "@/components/icons/icon";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { listAudience } from "@/features/audience/api/audience";
 import { listSubscriptionPlans } from "@/features/subscriptions/api/subscriptions";
 import type {
@@ -34,6 +35,7 @@ export function AudienceList() {
     if (!next.has("limit")) next.set("limit", String(PAGE_SIZE));
     if (!next.has("offset")) next.set("offset", "0");
     if (!next.has("access")) next.set("access", "all");
+    if (!next.has("status")) next.set("status", "all");
     if (!next.has("sortBy")) next.set("sortBy", "createdAt");
     if (!next.has("sortDirection")) next.set("sortDirection", "desc");
     return next;
@@ -140,6 +142,22 @@ export function AudienceList() {
               searchPlaceholder="Search access"
             />
             <SearchableSelect
+              ariaLabel="Filter by account status"
+              className="article-status-filter"
+              value={query.get("status") ?? "all"}
+              options={[
+                { value: "all", label: "All statuses" },
+                { value: "active", label: "Active", status: "active" },
+                {
+                  value: "disabled",
+                  label: "Disabled",
+                  status: "disabled",
+                },
+              ]}
+              onChange={(value) => replaceQuery({ status: value, offset: "0" })}
+              searchPlaceholder="Search statuses"
+            />
+            <SearchableSelect
               ariaLabel="Filter by subscription"
               className="article-status-filter"
               value={query.get("planId") ?? ""}
@@ -224,6 +242,7 @@ export function AudienceList() {
                       direction={sortDirection}
                       onSort={sort}
                     />
+                    <th>Status</th>
                     <th>Access</th>
                     <th>Subscription</th>
                     <th>Today</th>
@@ -264,6 +283,9 @@ export function AudienceList() {
                             <small>+{user.phoneNumber}</small>
                           </span>
                         </Link>
+                      </td>
+                      <td data-label="Status">
+                        <StatusBadge status={user.status} />
                       </td>
                       <td data-label="Access">
                         <span className="access-label">

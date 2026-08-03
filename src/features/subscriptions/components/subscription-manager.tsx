@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Icon } from "@/components/icons/icon";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { FreeAccessPolicy } from "@/features/subscriptions/components/free-access-policy";
 import {
   createSubscriptionPlan,
   listSubscriptionPlans,
@@ -163,6 +164,8 @@ export function SubscriptionManager({ canManage }: { canManage: boolean }) {
           ) : null}
         </div>
       </div>
+
+      <FreeAccessPolicy canManage={canManage} />
 
       {error && !plans ? (
         <div className="list-state" role="alert">
